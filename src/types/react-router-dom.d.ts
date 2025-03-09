@@ -9,7 +9,14 @@ declare module 'react-router-dom' {
     children?: ReactNode;
   }
 
+  export interface NavLinkProps extends LinkProps {
+    end?: boolean;
+    caseSensitive?: boolean;
+    className?: string | ((props: { isActive: boolean }) => string);
+  }
+
   export const Link: ComponentType<LinkProps>;
+  export const NavLink: ComponentType<NavLinkProps>;
   export const useNavigate: () => (path: string) => void;
   export const useParams: () => Record<string, string>;
   export const useLocation: () => { pathname: string; search: string; hash: string; state: any };

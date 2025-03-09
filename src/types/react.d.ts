@@ -25,6 +25,7 @@ declare module 'react' {
   export function useState<T>(initialState: T | (() => T)): [T, (newState: T | ((prevState: T) => T)) => void];
   export function useEffect(effect: () => void | (() => void), deps?: readonly any[]): void;
   export function createContext<T>(defaultValue: T): React.Context<T>;
+  export function useContext<T>(context: React.Context<T>): T;
   
   export interface Context<T> {
     Provider: Provider<T>;
@@ -59,4 +60,6 @@ declare module 'react' {
   export interface CSSProperties {
     [key: string]: string | number | undefined;
   }
+
+  export const StrictMode: FC<{ children?: ReactNode }>;
 } 

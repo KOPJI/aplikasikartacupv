@@ -25,5 +25,20 @@ declare module 'lucide-react' {
   export const Loader: Icon;
   export const Trash2: Icon;
   
-  // Tambahkan ikon lain yang digunakan dalam aplikasi Anda di sini
+  // Ikon tambahan yang digunakan dalam aplikasi
+  export const Award: Icon;
+  export const Trophy: Icon;
+  export const Pencil: Icon;
+  export const Plus: Icon;
+  export const ArrowUpFromLine: Icon;
+  export const Database: Icon;
+  export const ArrowDownToLine: Icon;
+  export const RefreshCcw: Icon;
+  export const ArrowLeft: Icon;
+  export const CirclePlus: Icon;
+  export const Save: Icon;
+  export const Squircle: Icon;
+  export const ChartLine: Icon;
+  export const House: Icon;
+  export const UserRound: Icon;
 } 
