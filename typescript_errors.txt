@@ -1,0 +1,8 @@
+npm error code ENOENT
+npm error syscall spawn cmd
+npm error path F:\PROJECT JADI VERCEL\sfds\aplikasikartacupv
+npm error errno -4058
+npm error enoent spawn cmd ENOENT
+npm error enoent This is related to npm not being able to find a file.
+npm error enoent
+npm error A complete log of this run can be found in: C:\Users\KARANG TARUNA\AppData\Local\npm-cache\_logs\2025-03-09T01_12_18_419Z-debug-0.log
