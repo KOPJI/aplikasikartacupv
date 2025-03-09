@@ -150,6 +150,9 @@ const jamPertandingan = ["13:30", "14:45", "16:00"];
 // Jam pertandingan khusus untuk hari pertama
 const jamPertandinganHariPertama = ["14:45", "16:00"];
 
+// Durasi pertandingan (dalam menit)
+const durasiPertandingan = 65; // 65 menit (1 jam 5 menit)
+
 export const TournamentProvider = ({ children }: { children: ReactNode }) => {
   const [teams, setTeams] = useState<Tim[]>(() => {
     const savedTeams = localStorage.getItem('teams');
@@ -309,6 +312,12 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
     
     // Tanggal pertama turnamen dalam format string
     const firstDayStr = startDate.toISOString().split('T')[0];
+    
+    // ATURAN JADWAL:
+    // 1. Hari pertama turnamen hanya ada 2 pertandingan (14:45 dan 16:00)
+    // 2. Hari-hari selanjutnya memiliki 3 pertandingan (13:30, 14:45, dan 16:00)
+    // 3. Hari terakhir diperbolehkan memiliki jumlah pertandingan tidak tepat 3 jika tidak ada pilihan lain
+    // 4. Durasi setiap pertandingan adalah 65 menit (1 jam 5 menit)
     
     // Initialize empty schedule for each team
     teams.forEach(team => {
@@ -787,6 +796,11 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
     const firstDayStr = availableDates.length > 0 ? availableDates[0] : '';
     const lastDayStr = availableDates.length > 0 ? availableDates[availableDates.length - 1] : '';
     
+    // ATURAN JADWAL:
+    // 1. Hari pertama turnamen hanya ada 2 pertandingan (14:45 dan 16:00)
+    // 2. Hari-hari selanjutnya memiliki 3 pertandingan (13:30, 14:45, dan 16:00)
+    // 3. Hari terakhir diperbolehkan memiliki jumlah pertandingan tidak tepat 3 jika tidak ada pilihan lain
+    
     // Check untuk tim yang bermain 2x dalam sehari
     pertandingan.forEach(match => {
       const sameDay = pertandingan.filter(
@@ -876,7 +890,7 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
       
       firstDayMatches.forEach(match => {
         if (!validFirstDayTimes.includes(match.waktu)) {
-          violations.push(`Pertandingan di hari pertama (${firstDayStr}) memiliki waktu ${match.waktu}, seharusnya salah satu dari: ${validFirstDayTimes.join(', ')}`);
+          violations.push(`Pertandingan di hari pertama (${firstDayStr}) memiliki waktu ${match.waktu}, seharusnya salah satu dari: ${validFirstDayTimes.join(', ')} (durasi ${durasiPertandingan} menit)`);
         }
       });
     }
@@ -889,6 +903,12 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
 
   // Menghasilkan jadwal pertandingan round-robin dengan algoritma baru
   const generateJadwal = (startDate: Date = new Date('2025-04-01')) => {
+    // ATURAN JADWAL:
+    // 1. Hari pertama turnamen hanya ada 2 pertandingan (14:45 dan 16:00)
+    // 2. Hari-hari selanjutnya memiliki 3 pertandingan (13:30, 14:45, dan 16:00)
+    // 3. Hari terakhir diperbolehkan memiliki jumlah pertandingan tidak tepat 3 jika tidak ada pilihan lain
+    // 4. Durasi setiap pertandingan adalah 65 menit (1 jam 5 menit)
+    
     // Siapkan daftar pertandingan yang perlu dijadwalkan
     const matchesToSchedule: { timA: string; timB: string; grup: string }[] = [];
     
@@ -1904,6 +1924,12 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
     const availableDates = [...new Set(pertandingan.map(p => p.tanggal))].sort();
     const firstDayStr = availableDates[0];
     const lastDayStr = availableDates[availableDates.length - 1];
+    
+    // ATURAN JADWAL:
+    // 1. Hari pertama turnamen hanya ada 2 pertandingan (14:45 dan 16:00)
+    // 2. Hari-hari selanjutnya memiliki 3 pertandingan (13:30, 14:45, dan 16:00)
+    // 3. Hari terakhir diperbolehkan memiliki jumlah pertandingan tidak tepat 3 jika tidak ada pilihan lain
+    // 4. Durasi setiap pertandingan adalah 65 menit (1 jam 5 menit)
     
     // Hitung jumlah pertandingan per hari
     const matchesPerDay: { [date: string]: number } = {};
