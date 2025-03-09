@@ -101,6 +101,7 @@ interface TournamentContextType {
   generateJadwal: (startDate?: Date) => { isValid: boolean; messages: string[] };
   validateSchedule: () => { isValid: boolean; messages: string[] };
   optimizeSchedule: () => { isValid: boolean; messages: string[]; optimized: boolean; optimizationCount?: number };
+  fixExistingSchedule: () => { isValid: boolean; messages: string[]; fixed: boolean; recreated?: boolean };
   getPertandinganByGrup: (grup: string) => Pertandingan[];
   getPertandinganByTanggal: (tanggal: string) => Pertandingan[];
   getPertandinganByTim: (timId: string) => Pertandingan[];
@@ -2510,6 +2511,116 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
     };
   };
 
+  // Fungsi untuk memperbaiki jadwal yang sudah ada
+  const fixExistingSchedule = () => {
+    console.log("MEMPERBAIKI JADWAL YANG SUDAH ADA");
+    
+    // Jika tidak ada pertandingan, tidak ada yang perlu diperbaiki
+    if (pertandingan.length === 0) {
+      console.log("Tidak ada pertandingan untuk diperbaiki");
+      return {
+        isValid: true,
+        messages: ["Tidak ada pertandingan untuk diperbaiki"],
+        fixed: false
+      };
+    }
+    
+    // Validasi jadwal saat ini
+    const validationResult = validateSchedule();
+    
+    // Jika jadwal sudah valid, tidak perlu diperbaiki
+    if (validationResult.isValid) {
+      console.log("Jadwal sudah valid, tidak perlu diperbaiki");
+      return {
+        isValid: true,
+        messages: ["Jadwal sudah valid, tidak perlu diperbaiki"],
+        fixed: false
+      };
+    }
+    
+    console.log("Jadwal tidak valid, mulai memperbaiki...");
+    console.log("Pelanggaran:", validationResult.messages);
+    
+    // Gunakan forceFixSchedule untuk memperbaiki jadwal
+    const fixedSchedule = forceFixSchedule();
+    
+    // Update state dengan jadwal yang diperbaiki
+    setPertandingan(fixedSchedule);
+    
+    // Validasi jadwal yang sudah diperbaiki
+    const newValidationResult = validateSchedule();
+    
+    if (newValidationResult.isValid) {
+      console.log("Jadwal berhasil diperbaiki!");
+      return {
+        isValid: true,
+        messages: ["Jadwal berhasil diperbaiki!"],
+        fixed: true
+      };
+    } else {
+      console.log("Jadwal masih tidak valid setelah diperbaiki. Pelanggaran:", newValidationResult.messages);
+      
+      // Jika masih ada pelanggaran, coba pendekatan yang lebih agresif
+      // Hapus semua jadwal dan buat ulang
+      console.log("Mencoba pendekatan yang lebih agresif: Hapus semua jadwal dan buat ulang");
+      
+      // Simpan pertandingan yang sudah ada
+      const existingMatches = [...pertandingan];
+      
+      // Hapus semua jadwal
+      clearSchedule();
+      
+      // Buat jadwal baru
+      const startDate = new Date(existingMatches[0]?.tanggal || '2025-04-01');
+      
+      // Siapkan daftar pertandingan yang perlu dijadwalkan
+      const matchesToSchedule: { timA: string; timB: string; grup: string }[] = [];
+      
+      // Untuk setiap grup, buat daftar pertandingan round-robin
+      Object.entries(grupData).forEach(([grup, _]) => {
+        const timDalamGrup = teams.filter(team => team.grup === grup);
+        
+        // Round-robin algorithm
+        for (let i = 0; i < timDalamGrup.length - 1; i++) {
+          for (let j = i + 1; j < timDalamGrup.length; j++) {
+            matchesToSchedule.push({
+              timA: timDalamGrup[i].id,
+              timB: timDalamGrup[j].id,
+              grup
+            });
+          }
+        }
+      });
+      
+      // Jadwalkan pertandingan dengan algoritma baru
+      const scheduledMatches = findOptimalSchedule(matchesToSchedule, startDate);
+      
+      // Update state
+      setPertandingan(scheduledMatches);
+      
+      // Validasi jadwal baru
+      const finalValidationResult = validateSchedule();
+      
+      if (finalValidationResult.isValid) {
+        console.log("Jadwal berhasil dibuat ulang dan valid!");
+        return {
+          isValid: true,
+          messages: ["Jadwal berhasil dibuat ulang dan valid!"],
+          fixed: true,
+          recreated: true
+        };
+      } else {
+        console.log("Jadwal masih tidak valid setelah dibuat ulang. Pelanggaran:", finalValidationResult.messages);
+        return {
+          isValid: false,
+          messages: ["Jadwal masih tidak valid setelah dibuat ulang. Silakan hubungi administrator."],
+          fixed: false,
+          recreated: true
+        };
+      }
+    }
+  };
+
   return (
     <TournamentContext.Provider value={{
       teams,
@@ -2529,19 +2640,20 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
       generateJadwal,
       validateSchedule,
       optimizeSchedule,
+      fixExistingSchedule,
       getPertandinganByGrup,
       getPertandinganByTanggal,
       getPertandinganByTim,
       getRestDaysByTeam,
       clearSchedule,
       
-      // Hasil
+      // Hasil Pertandingan
       simpanHasilPertandingan,
       updateKlasemen,
       getKlasemenGrup,
       getPencetakGolTerbanyak,
       
-      // Fungsi reset data statistik
+      // Fungsi untuk menghapus data statistik
       resetPencetakGol,
       resetKartuPemain,
       resetLaranganBermain,

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Trophy, Calendar, ChevronLeft, ChevronRight, Loader, Shield, Trash2, RefreshCcw } from 'lucide-react';
+import { Trophy, Calendar, ChevronLeft, ChevronRight, Loader, Shield, Trash2, RefreshCcw, Settings, AlertCircle } from 'lucide-react';
 import { useTournament } from '../context/TournamentContext';
 import { initializeMatchesToFirestore, deleteCollectionData } from '../services/firebase';
 import TeamScheduleStats from './TeamScheduleStats';
@@ -13,6 +13,7 @@ const JadwalPertandingan = () => {
     getTeam,
     validateSchedule,
     optimizeSchedule,
+    fixExistingSchedule,
     clearSchedule
   } = useTournament();
   
@@ -173,6 +174,48 @@ const JadwalPertandingan = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Handler untuk memperbaiki jadwal yang sudah ada
+  const handleFixSchedule = () => {
+    if (window.confirm('Apakah Anda yakin ingin memperbaiki jadwal? Ini akan mengubah jadwal yang sudah ada untuk memastikan semua aturan jadwal dipatuhi.')) {
+      setIsLoading(true);
+      setStatus({ type: 'info', message: 'Sedang memperbaiki jadwal...' });
+      
+      try {
+        const result = fixExistingSchedule();
+        
+        if (result.isValid) {
+          if (result.recreated) {
+            setStatus({ type: 'success', message: 'Jadwal berhasil dibuat ulang dan sekarang valid!' });
+          } else if (result.fixed) {
+            setStatus({ type: 'success', message: 'Jadwal berhasil diperbaiki!' });
+          } else {
+            setStatus({ type: 'info', message: 'Jadwal sudah valid, tidak perlu diperbaiki.' });
+          }
+          
+          // Perbarui tanggal yang tersedia
+          const dates = [...new Set(pertandingan.map(p => p.tanggal))].sort();
+          setAvailableDates(dates);
+          
+          // Jika ada tanggal yang dipilih, pastikan masih ada dalam jadwal
+          if (selectedDate && !dates.includes(selectedDate)) {
+            setSelectedDate(dates[0] || '');
+          }
+          
+          // Perbarui pesan validasi
+          setValidationMessages([]);
+        } else {
+          setStatus({ type: 'error', message: 'Gagal memperbaiki jadwal. ' + result.messages.join(' ') });
+          setValidationMessages(result.messages);
+        }
+      } catch (error) {
+        console.error('Error saat memperbaiki jadwal:', error);
+        setStatus({ type: 'error', message: 'Terjadi kesalahan saat memperbaiki jadwal.' });
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -348,6 +391,19 @@ const JadwalPertandingan = () => {
                 onClick={handleOptimizeSchedule}
                 disabled={isLoading}
                 className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white font-medium py-2 px-4 rounded-md inline-flex items-center shadow-sm"
+              >
+                {isLoading ? (
+                  <Loader className="h-5 w-5 mr-1 animate-spin" />
+                ) : (
+                  <RefreshCcw className="h-5 w-5 mr-1" />
+                )}
+                Perbaiki Jadwal
+              </button>
+              
+              <button
+                onClick={handleFixSchedule}
+                disabled={isLoading}
+                className="bg-teal-600 hover:bg-teal-700 disabled:bg-teal-400 text-white font-medium py-2 px-4 rounded-md inline-flex items-center shadow-sm"
               >
                 {isLoading ? (
                   <Loader className="h-5 w-5 mr-1 animate-spin" />
