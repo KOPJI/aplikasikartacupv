@@ -323,3 +323,31 @@ export const initializeKnockoutMatchesToFirestore = async (matches: any[]) => {
     throw error;
   }
 };
+
+// Fungsi-fungsi untuk head-to-head
+export const saveHeadToHeadToFirestore = async (headToHead: any) => {
+  try {
+    // Simpan data head-to-head sebagai satu dokumen dengan ID tetap
+    await setDoc(doc(db, 'head_to_head', 'current'), { data: headToHead });
+    return true;
+  } catch (error) {
+    console.error("Error menyimpan data head-to-head:", error);
+    throw error;
+  }
+};
+
+export const getHeadToHeadFromFirestore = async () => {
+  try {
+    const headToHeadDoc = await getDocs(collection(db, 'head_to_head'));
+    if (headToHeadDoc.empty) {
+      return null;
+    }
+    
+    // Ambil dokumen pertama (seharusnya hanya ada satu dokumen)
+    const doc = headToHeadDoc.docs[0];
+    return doc.data().data;
+  } catch (error) {
+    console.error("Error mendapatkan data head-to-head:", error);
+    throw error;
+  }
+};

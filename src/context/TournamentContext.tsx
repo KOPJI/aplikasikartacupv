@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { saveHeadToHeadToFirestore, getHeadToHeadFromFirestore } from '../services/firebase';
 
 // Definisi tipe data
 export interface Pemain {
@@ -102,8 +103,8 @@ interface TournamentContextType {
   clearSchedule: () => void; // Menambahkan fungsi untuk menghapus jadwal
   
   // Hasil Pertandingan
-  simpanHasilPertandingan: (hasil: Omit<HasilPertandingan, "id">) => void;
-  updateKlasemen: () => void;
+  simpanHasilPertandingan: (hasil: Omit<HasilPertandingan, "id">) => Promise<void>;
+  updateKlasemen: () => Promise<void>;
   getKlasemenGrup: (grup: string) => Tim[];
   getPencetakGolTerbanyak: (limit?: number) => Pemain[];
   
@@ -181,6 +182,39 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
     const savedPertandingan = localStorage.getItem('pertandinganBabakGugur');
     return savedPertandingan ? JSON.parse(savedPertandingan) : [];
   });
+
+  // State untuk menyimpan data head-to-head
+  const [headToHeadData, setHeadToHeadData] = useState<Record<string, Record<string, { menang: number, seri: number, kalah: number }>>>({});
+  
+  // Ambil data head-to-head dari Firestore saat komponen dimuat
+  useEffect(() => {
+    const fetchHeadToHead = async () => {
+      try {
+        const data = await getHeadToHeadFromFirestore();
+        if (data) {
+          setHeadToHeadData(data);
+          console.log("Data head-to-head berhasil diambil dari Firestore");
+        } else {
+          // Fallback ke localStorage jika data tidak ada di Firestore
+          const savedHeadToHead = localStorage.getItem('headToHead');
+          if (savedHeadToHead) {
+            setHeadToHeadData(JSON.parse(savedHeadToHead));
+            console.log("Data head-to-head diambil dari localStorage");
+          }
+        }
+      } catch (error) {
+        console.error("Error mengambil data head-to-head:", error);
+        // Fallback ke localStorage jika Firestore gagal
+        const savedHeadToHead = localStorage.getItem('headToHead');
+        if (savedHeadToHead) {
+          setHeadToHeadData(JSON.parse(savedHeadToHead));
+          console.log("Data head-to-head diambil dari localStorage (fallback)");
+        }
+      }
+    };
+    
+    fetchHeadToHead();
+  }, []);
 
   // Menyimpan data ke localStorage saat ada perubahan
   useEffect(() => {
@@ -1445,7 +1479,7 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Fungsi untuk hasil pertandingan
-  const simpanHasilPertandingan = (hasil: Omit<HasilPertandingan, "id">) => {
+  const simpanHasilPertandingan = async (hasil: Omit<HasilPertandingan, "id">) => {
     const hasilWithId: HasilPertandingan = {
       ...hasil,
       id: crypto.randomUUID()
@@ -1462,8 +1496,13 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
     
     // Update statistik pemain (gol dan kartu)
     updatePemainStatistik(hasil);
-    // Update klasemen
-    updateKlasemen();
+    
+    // Update klasemen (async)
+    try {
+      await updateKlasemen();
+    } catch (error) {
+      console.error("Error saat memperbarui klasemen:", error);
+    }
   };
 
   // Update statistik pemain setelah pertandingan
@@ -1520,7 +1559,7 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Update klasemen berdasarkan hasil pertandingan
-  const updateKlasemen = () => {
+  const updateKlasemen = async () => {
     // Reset klasemen
     const resetTeams = teams.map(team => ({
       ...team,
@@ -1630,25 +1669,23 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
       };
     });
     
-    // Simpan head-to-head record untuk digunakan dalam tie-breaker
-    localStorage.setItem('headToHead', JSON.stringify(headToHead));
+    // Simpan head-to-head record ke Firestore dan update state
+    try {
+      await saveHeadToHeadToFirestore(headToHead);
+      setHeadToHeadData(headToHead);
+      console.log("Data head-to-head berhasil disimpan ke Firestore");
+    } catch (error) {
+      console.error("Gagal menyimpan data head-to-head ke Firestore:", error);
+      // Fallback ke localStorage jika Firestore gagal
+      localStorage.setItem('headToHead', JSON.stringify(headToHead));
+      setHeadToHeadData(headToHead);
+    }
     
     setTeams(updatedTeams);
   };
 
   // Mendapatkan klasemen grup
   const getKlasemenGrup = (grup: string) => {
-    // Dapatkan head-to-head record
-    let headToHead: Record<string, Record<string, { menang: number, seri: number, kalah: number }>> = {};
-    try {
-      const savedHeadToHead = localStorage.getItem('headToHead');
-      if (savedHeadToHead) {
-        headToHead = JSON.parse(savedHeadToHead);
-      }
-    } catch (error) {
-      console.error("Error parsing head-to-head data:", error);
-    }
-    
     // Filter tim berdasarkan grup
     const teamsInGroup = teams.filter(team => team.grup === grup);
     
@@ -1678,10 +1715,8 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
       // 4. Head-to-Head
       // Jika kedua tim memiliki poin, selisih gol, dan gol masuk yang sama,
       // periksa hasil pertandingan langsung antara kedua tim
-      if (headToHead[a.id] && headToHead[a.id][b.id]) {
-        const h2h = headToHead[a.id][b.id];
-        // Hitung poin head-to-head
-        const h2hPointsA = h2h.menang * 3 + h2h.seri;
+      if (headToHeadData && headToHeadData[a.id] && headToHeadData[a.id][b.id]) {
+        const h2h = headToHeadData[a.id][b.id];
         
         if (h2h.menang > h2h.kalah) {
           return -1; // Tim A menang dalam head-to-head
