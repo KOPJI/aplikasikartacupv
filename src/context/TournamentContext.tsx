@@ -189,15 +189,6 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem('pertandinganBabakGugur', JSON.stringify(pertandinganBabakGugur));
   }, [pertandinganBabakGugur]);
 
-  // Helper function: cek apakah tim bermain pada tanggal tertentu
-  const isTeamPlayingOnDate = (teamId: string, date: string, excludeMatchId?: string): boolean => {
-    return pertandingan.some(match => 
-      (match.timA === teamId || match.timB === teamId) && 
-      match.tanggal === date &&
-      (excludeMatchId ? match.id !== excludeMatchId : true)
-    );
-  };
-
   // Hitung jumlah hari antara dua tanggal
   const daysBetween = (date1: string, date2: string): number => {
     const d1 = new Date(date1);
