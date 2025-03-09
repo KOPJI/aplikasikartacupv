@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Award, Calendar, ChartLine, Database, House, Trophy, Users } from 'lucide-react';
+import { Award, Calendar, Database, Trophy, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Navbar = () => {
@@ -66,7 +66,7 @@ const Navbar = () => {
                 : "flex flex-col items-center px-3 py-2 rounded-md text-xs font-medium hover:bg-green-600 hover:bg-opacity-75"
             }
           >
-            <House className="h-5 w-5" />
+            <Award className="h-5 w-5" />
             <span>Beranda</span>
           </NavLink>
           <NavLink
@@ -77,7 +77,7 @@ const Navbar = () => {
                 : "flex flex-col items-center px-3 py-2 rounded-md text-xs font-medium hover:bg-green-600 hover:bg-opacity-75"
             }
           >
-            <ChartLine className="h-5 w-5" />
+            <Trophy className="h-5 w-5" />
             <span>Statistik</span>
           </NavLink>
           <NavLink
