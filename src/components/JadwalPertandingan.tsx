@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ChartBar, Calendar, ChevronLeft, ChevronRight, Loader, Shield, Trash2, RefreshCcw, AlertCircle } from 'lucide-react';
+import { Trophy, Calendar, ChevronLeft, ChevronRight, Loader, Shield, Trash2, RefreshCcw } from 'lucide-react';
 import { useTournament } from '../context/TournamentContext';
 import { initializeMatchesToFirestore, deleteCollectionData } from '../services/firebase';
 import TeamScheduleStats from './TeamScheduleStats';
@@ -405,14 +405,12 @@ const JadwalPertandingan = () => {
                 Silakan pilih tanggal mulai turnamen. Jadwal pertandingan akan dibuat berdasarkan tanggal ini.
               </p>
               
-              <div className="bg-blue-50 p-4 rounded-lg mb-4">
-                <div className="flex items-start">
-                  <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
-                  <div>
-                    <p className="text-blue-700">
-                      Tanggal mulai turnamen adalah tanggal pertandingan pertama akan dijadwalkan. Pastikan Anda memilih tanggal yang tepat.
-                    </p>
-                  </div>
+              <div className="flex items-center text-blue-700 bg-blue-50 p-4 rounded-lg mb-6">
+                <Calendar className="h-5 w-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
+                <div>
+                  <p className="text-sm">
+                    Anda dapat mengatur jadwal pertandingan di sini. Klik pada tanggal untuk melihat pertandingan pada hari tersebut.
+                  </p>
                 </div>
               </div>
               
@@ -482,7 +480,7 @@ const JadwalPertandingan = () => {
       {pertandingan.length > 0 && hariDenganPertandinganTidakTepat3.length > 0 && (
         <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-md">
           <div className="flex items-start">
-            <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
+            <Calendar className="h-5 w-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
             <div>
               <h3 className="font-medium text-yellow-800 mb-2">Peringatan:</h3>
               <p className="text-yellow-700 mb-3">
@@ -531,7 +529,7 @@ const JadwalPertandingan = () => {
               }`}
             >
               <div className="flex items-center">
-                <ChartBar className="mr-2 h-4 w-4" />
+                <Trophy className="mr-2 h-4 w-4" />
                 Statistik Jadwal
               </div>
             </button>
@@ -542,7 +540,7 @@ const JadwalPertandingan = () => {
               {/* Ringkasan Jadwal */}
               <div className="bg-blue-50 rounded-lg p-4 mb-6">
                 <h3 className="font-medium text-blue-800 mb-3 flex items-center">
-                  <AlertCircle className="h-5 w-5 mr-2" />
+                  <Calendar className="h-5 w-5 mr-2" />
                   Ringkasan Jadwal {selectedGrup !== 'all' ? `Grup ${selectedGrup}` : 'Semua Grup'}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -732,7 +730,7 @@ const JadwalPertandingan = () => {
           <div className="flex flex-col items-center">
             <div className="bg-blue-50 p-4 rounded-lg mb-6 max-w-md text-left">
               <div className="flex">
-                <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
+                <Calendar className="h-5 w-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
                 <div>
                   <h3 className="font-medium text-blue-800 mb-1">Petunjuk:</h3>
                   <p className="text-blue-700 text-sm">
