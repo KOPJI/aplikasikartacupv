@@ -9,7 +9,6 @@ interface PemainStatistik extends Pemain {
   totalCards?: number;
   banReason?: string;
   alasanLarangan?: string;
-  jumlahGol?: number;
   assists?: number;
 }
 
@@ -259,7 +258,7 @@ const StatistikPemain = () => {
                               </div>
                             </div>
                             <div className="text-center">
-                              <div className="text-3xl font-bold text-green-600">{scorer.jumlahGol || scorer.golTotal}</div>
+                              <div className="text-3xl font-bold text-green-600">{scorer.golTotal}</div>
                               <div className="text-xs text-gray-500">Gol</div>
                             </div>
                           </div>
