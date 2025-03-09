@@ -1160,7 +1160,45 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
 
   // Fungsi untuk menghapus jadwal
   const clearSchedule = () => {
+    // Hapus semua pertandingan
     setPertandingan([]);
+    
+    // Hapus semua pertandingan babak gugur
+    setPertandinganBabakGugur([]);
+    
+    // Reset statistik pemain (gol, kartu kuning, kartu merah)
+    const resetTeams = teams.map(team => {
+      // Reset statistik tim
+      const resetedTeam = {
+        ...team,
+        main: 0,
+        menang: 0,
+        seri: 0,
+        kalah: 0,
+        golMasuk: 0,
+        golKemasukan: 0,
+        selisihGol: 0,
+        poin: 0
+      };
+      
+      // Reset statistik pemain
+      const resetedPlayers = team.pemain.map(player => ({
+        ...player,
+        golTotal: 0,
+        kartuKuning: 0,
+        kartuMerah: 0
+      }));
+      
+      return {
+        ...resetedTeam,
+        pemain: resetedPlayers
+      };
+    });
+    
+    // Update teams dengan statistik yang sudah direset
+    setTeams(resetTeams);
+    
+    console.log("Jadwal, pertandingan babak gugur, dan statistik pemain telah direset");
   };
 
   const getTeamsByGroup = (group: string) => {
