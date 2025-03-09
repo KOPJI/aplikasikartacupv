@@ -91,6 +91,19 @@ const Navbar = () => {
                 </div>
               </NavLink>
               <NavLink
+                to="/statistik"
+                className={({ isActive }) =>
+                  isActive
+                    ? "bg-green-600 px-3 py-2 rounded-md text-sm font-medium"
+                    : "px-3 py-2 rounded-md text-sm font-medium hover:bg-green-600 hover:bg-opacity-75"
+                }
+              >
+                <div className="flex items-center">
+                  <Award className="h-4 w-4 mr-1" />
+                  Statistik
+                </div>
+              </NavLink>
+              <NavLink
                 to="/data-initializer"
                 className={({ isActive }) =>
                   isActive
@@ -176,6 +189,17 @@ const Navbar = () => {
           >
             <Award className="h-5 w-5" />
             <span>Gugur</span>
+          </NavLink>
+          <NavLink
+            to="/statistik"
+            className={({ isActive }) =>
+              isActive
+                ? "bg-green-600 flex flex-col items-center px-3 py-2 rounded-md text-xs font-medium"
+                : "flex flex-col items-center px-3 py-2 rounded-md text-xs font-medium hover:bg-green-600 hover:bg-opacity-75"
+            }
+          >
+            <Award className="h-5 w-5" />
+            <span>Statistik</span>
           </NavLink>
           <NavLink
             to="/data-initializer"
