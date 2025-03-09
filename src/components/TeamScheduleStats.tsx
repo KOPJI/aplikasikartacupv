@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Trophy, ChevronDown, ChevronUp, CircleAlert, CircleCheck, Shield } from 'lucide-react';
+import { Trophy, ChevronDown, ChevronUp, Shield } from 'lucide-react';
 import { useTournament } from '../context/TournamentContext';
 
 type SortField = 'name' | 'group' | 'matches' | 'restDays' | 'avgRest';
@@ -335,12 +335,12 @@ const TeamScheduleStats = () => {
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-center">
                         {team.consecutiveDays || team.multipleMatchesDay ? (
                           <div className="flex items-center justify-center text-red-600">
-                            <CircleAlert className="h-4 w-4 mr-1" />
+                            <span className="font-bold mr-1">!</span>
                             <span>Masalah</span>
                           </div>
                         ) : team.matchesCount > 0 ? (
                           <div className="flex items-center justify-center text-green-600">
-                            <CircleCheck className="h-4 w-4 mr-1" />
+                            <Trophy className="h-4 w-4 mr-1" />
                             <span>Baik</span>
                           </div>
                         ) : (
