@@ -857,17 +857,6 @@ const JadwalPertandingan = () => {
               </ul>
             </div>
             
-            <div className="bg-green-50 p-4 rounded-lg">
-              <h3 className="font-medium text-green-800 mb-2">Aturan Jadwal:</h3>
-              <ul className="list-disc pl-5 space-y-2">
-                <li>Setiap hari diusahakan memiliki tepat 3 pertandingan dengan jadwal tetap.</li>
-                <li>Jadwal pertandingan diatur dengan memperhatikan waktu istirahat tim.</li>
-                <li>Tidak ada tim yang bermain dua kali dalam sehari.</li>
-                <li>Tidak ada tim yang bermain di hari berturut-turut.</li>
-                <li>Rata-rata waktu istirahat antar pertandingan untuk setiap tim: <span className="font-medium">3-5 hari</span>.</li>
-              </ul>
-            </div>
-            
             <div className="bg-purple-50 p-4 rounded-lg">
               <h3 className="font-medium text-purple-800 mb-2">Jadwal Waktu Pertandingan:</h3>
               <ul className="list-disc pl-5 space-y-2">

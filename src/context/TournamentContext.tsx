@@ -190,19 +190,14 @@ const jamPertandingan = ["13:30", "14:45", "16:00"];
 const jamPertandinganHariPertama = ["14:45", "16:00"];
 
 // Durasi pertandingan (dalam menit)
-const durasiPertandingan = 65; // 65 menit (1 jam 5 menit)
+const durasiPertandingan = 65;
 
-// Waktu selesai pertandingan (untuk dokumentasi)
+// Waktu selesai pertandingan
 const waktuSelesaiPertandingan = {
-  "13:30": "14:35", // 13:30 + 65 menit
-  "14:45": "15:50", // 14:45 + 65 menit
-  "16:00": "17:05"  // 16:00 + 65 menit
+  "13:30": "14:35",
+  "14:45": "15:50",
+  "16:00": "17:05"
 };
-
-// ATURAN JADWAL YANG SEDERHANA:
-// 1. Hari pertama: 2 pertandingan (14:45 dan 16:00)
-// 2. Hari-hari lainnya: 3 pertandingan (13:30, 14:45, dan 16:00)
-// 3. Hari terakhir: Boleh kurang dari 3 pertandingan jika diperlukan
 
 export const TournamentProvider = ({ children }: { children: ReactNode }) => {
   const [teams, setTeams] = useState<Tim[]>(() => {
