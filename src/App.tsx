@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useEffect } from 'react';
 import HomePage from './components/HomePage';
 import Navbar from './components/Navbar';
@@ -14,7 +14,6 @@ import HasilBabakGugurForm from './components/HasilBabakGugurForm';
 import DataInitializer from './components/DataInitializer';
 import FirestoreIntegration from './components/FirestoreIntegration';
 import StatistikPemain from './components/StatistikPemain';
-import ManajemenPemainGrup from './components/ManajemenPemainGrup';
 import DetailManajemenPemain from './components/DetailManajemenPemain';
 import { TournamentProvider } from './context/TournamentContext';
 import './index.css';
@@ -35,9 +34,9 @@ function App() {
   return (
     <TournamentProvider>
       <Router>
-        <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 font-[Poppins]">
+        <div className="min-h-screen bg-gray-100">
           <Navbar />
-          <div className="container mx-auto px-4 py-8">
+          <div className="container mx-auto py-6 px-4">
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/grup" element={<GrupList />} />
@@ -54,7 +53,6 @@ function App() {
               <Route path="/data-initializer" element={<DataInitializer />} />
               <Route path="/firebase-integration" element={<FirestoreIntegration />} />
               <Route path="/statistik" element={<StatistikPemain />} />
-              <Route path="/pemain-grup" element={<ManajemenPemainGrup />} />
               <Route path="/manajemen-pemain" element={<DetailManajemenPemain />} />
             </Routes>
           </div>
