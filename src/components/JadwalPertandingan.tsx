@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ChartBar, Calendar, ChevronLeft, ChevronRight, Loader, Shield, Trash2, RefreshCcw } from 'lucide-react';
+import { ChartBar, Calendar, ChevronLeft, ChevronRight, Loader, Shield, Trash2, RefreshCcw, AlertCircle } from 'lucide-react';
 import { useTournament } from '../context/TournamentContext';
 import { initializeMatchesToFirestore, deleteCollectionData } from '../services/firebase';
 import TeamScheduleStats from './TeamScheduleStats';
@@ -43,6 +43,21 @@ const JadwalPertandingan = () => {
     ? getPertandinganByTanggal(selectedDate)
         .filter(p => selectedGrup === 'all' || p.grup === selectedGrup)
     : [];
+    
+  // Hitung total pertandingan berdasarkan filter grup
+  const totalPertandingan = pertandingan.filter(p => selectedGrup === 'all' || p.grup === selectedGrup).length;
+  
+  // Hitung jumlah hari pertandingan berdasarkan filter grup
+  const hariPertandingan = [...new Set(
+    pertandingan
+      .filter(p => selectedGrup === 'all' || p.grup === selectedGrup)
+      .map(p => p.tanggal)
+  )].length;
+  
+  // Hitung jumlah pertandingan yang sudah selesai
+  const pertandinganSelesai = pertandingan
+    .filter(p => selectedGrup === 'all' || p.grup === selectedGrup)
+    .filter(p => p.hasil && p.hasil.selesai).length;
 
   // Fungsi untuk membuat jadwal
   const handleGenerateJadwal = () => {
@@ -390,6 +405,33 @@ const JadwalPertandingan = () => {
 
           {activeTab === 'schedule' ? (
             <>
+              {/* Ringkasan Jadwal */}
+              <div className="bg-blue-50 rounded-lg p-4 mb-6">
+                <h3 className="font-medium text-blue-800 mb-3 flex items-center">
+                  <AlertCircle className="h-5 w-5 mr-2" />
+                  Ringkasan Jadwal {selectedGrup !== 'all' ? `Grup ${selectedGrup}` : 'Semua Grup'}
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-white p-3 rounded-lg shadow-sm">
+                    <div className="text-sm text-gray-500">Total Pertandingan:</div>
+                    <div className="text-xl font-bold text-blue-700">{totalPertandingan} Pertandingan</div>
+                  </div>
+                  <div className="bg-white p-3 rounded-lg shadow-sm">
+                    <div className="text-sm text-gray-500">Jumlah Hari Pertandingan:</div>
+                    <div className="text-xl font-bold text-blue-700">{hariPertandingan} Hari</div>
+                  </div>
+                  <div className="bg-white p-3 rounded-lg shadow-sm">
+                    <div className="text-sm text-gray-500">Pertandingan Selesai:</div>
+                    <div className="text-xl font-bold text-blue-700">
+                      {pertandinganSelesai} dari {totalPertandingan} 
+                      <span className="text-sm font-normal ml-1">
+                        ({Math.round((pertandinganSelesai / totalPertandingan) * 100) || 0}%)
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
                 <div className="mb-3 sm:mb-0">
                   <button
@@ -436,6 +478,14 @@ const JadwalPertandingan = () => {
                   <span className="text-lg font-semibold text-gray-800">
                     {selectedDate ? formatDate(selectedDate) : 'Pilih Tanggal'}
                   </span>
+                  {selectedDate && (
+                    <div className="text-sm text-gray-500 mt-1">
+                      <span className="inline-flex items-center">
+                        <Calendar className="h-3 w-3 mr-1" />
+                        {pertandinganHariIni.length} Pertandingan
+                      </span>
+                    </div>
+                  )}
                 </div>
                 
                 <button
@@ -564,6 +614,7 @@ const JadwalPertandingan = () => {
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-lg font-semibold mb-4">Informasi Jadwal:</h2>
           <div className="space-y-2 text-sm text-gray-600">
+            <p>• Total pertandingan: <span className="font-medium">{pertandingan.length} pertandingan</span> dalam <span className="font-medium">{availableDates.length} hari</span>.</p>
             <p>• Jadwal pertandingan diatur dengan memperhatikan waktu istirahat tim.</p>
             <p>• Setiap hari ada maksimal 3 pertandingan dengan jadwal tetap:</p>
             <ul className="list-disc pl-8 space-y-1">
@@ -573,6 +624,7 @@ const JadwalPertandingan = () => {
             </ul>
             <p>• Tidak ada tim yang bermain dua kali dalam sehari.</p>
             <p>• Tidak ada tim yang bermain di hari berturut-turut.</p>
+            <p>• Rata-rata waktu istirahat antar pertandingan untuk setiap tim: <span className="font-medium">3-5 hari</span>.</p>
           </div>
         </div>
       )}
