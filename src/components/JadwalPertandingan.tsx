@@ -32,6 +32,9 @@ const JadwalPertandingan = () => {
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [startDate, setStartDate] = useState<string>('');
   
+  const [showErrorDetails, setShowErrorDetails] = useState(false);
+  const [errorDetails, setErrorDetails] = useState<string[]>([]);
+  
   // Mendapatkan tanggal hari ini dalam format YYYY-MM-DD
   const getTodayDate = () => {
     const today = new Date();
@@ -182,12 +185,16 @@ const JadwalPertandingan = () => {
     if (window.confirm('Apakah Anda yakin ingin memperbaiki jadwal? Ini akan mengubah jadwal yang sudah ada untuk memastikan semua aturan jadwal dipatuhi.')) {
       setIsLoading(true);
       setStatus({ type: 'info', message: 'Sedang memperbaiki jadwal...' });
+      setShowErrorDetails(false);
+      setErrorDetails([]);
       
       try {
         const result = fixExistingSchedule();
         
         if (result.isValid) {
-          if (result.recreated) {
+          if (result.manualFix) {
+            setStatus({ type: 'success', message: 'Jadwal berhasil diperbaiki secara manual!' });
+          } else if (result.recreated) {
             setStatus({ type: 'success', message: 'Jadwal berhasil dibuat ulang dan sekarang valid!' });
           } else if (result.fixed) {
             setStatus({ type: 'success', message: 'Jadwal berhasil diperbaiki!' });
@@ -207,8 +214,24 @@ const JadwalPertandingan = () => {
           // Perbarui pesan validasi
           setValidationMessages([]);
         } else {
-          setStatus({ type: 'error', message: 'Gagal memperbaiki jadwal. ' + result.messages.join(' ') });
-          setValidationMessages(result.messages);
+          // Simpan detail error
+          const detailMessages = result.messages.length > 1 ? result.messages.slice(1) : [];
+          setErrorDetails(detailMessages);
+          
+          // Tampilkan pesan error utama
+          setStatus({ 
+            type: 'error', 
+            message: result.messages[0] || 'Gagal memperbaiki jadwal. Silakan hubungi administrator.' 
+          });
+          
+          // Validasi jadwal untuk mendapatkan pesan validasi
+          const validationResult = validateSchedule();
+          setValidationMessages(validationResult.messages);
+          
+          // Jika ada detail error, tampilkan tombol untuk melihat detail
+          if (detailMessages.length > 0) {
+            setShowErrorDetails(true);
+          }
         }
       } catch (error) {
         console.error('Error saat memperbaiki jadwal:', error);
@@ -358,7 +381,7 @@ const JadwalPertandingan = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-800">Jadwal Pertandingan</h1>
         
-        <div className="flex gap-2">
+        <div className="flex space-x-2">
           <button
             onClick={handleGenerateJadwal}
             disabled={isLoading}
@@ -442,6 +465,57 @@ const JadwalPertandingan = () => {
         </div>
       </div>
       
+      {/* Status message */}
+      {status.type && (
+        <div className={`p-4 rounded-md ${
+          status.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 
+          status.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 
+          status.type === 'warning' ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' :
+          'bg-blue-50 text-blue-700 border border-blue-200'
+        }`}>
+          <p className="font-medium">{status.message}</p>
+          
+          {showErrorDetails && (
+            <div className="mt-2">
+              <button
+                onClick={() => setShowErrorDetails(false)}
+                className="text-sm underline mb-2"
+              >
+                Sembunyikan detail error
+              </button>
+              <ul className="list-disc pl-5 text-sm">
+                {errorDetails.map((detail, index) => (
+                  <li key={index}>{detail}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
+          {status.type === 'error' && errorDetails.length > 0 && !showErrorDetails && (
+            <button
+              onClick={() => setShowErrorDetails(true)}
+              className="text-sm underline mt-1"
+            >
+              Lihat detail error
+            </button>
+          )}
+        </div>
+      )}
+      
+      {validationMessages.length > 0 && (
+        <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 p-4 rounded-md">
+          <h3 className="font-bold mb-2 flex items-center">
+            <RefreshCcw className="h-5 w-5 mr-1" />
+            Peringatan jadwal:
+          </h3>
+          <ul className="list-disc pl-5">
+            {validationMessages.map((message, index) => (
+              <li key={index}>{message}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      
       {/* Dialog Pemilihan Tanggal Mulai Turnamen */}
       {showStartDatePicker && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fadeIn">
@@ -508,30 +582,6 @@ const JadwalPertandingan = () => {
         </div>
       )}
 
-      {status.type && (
-        <div className={`p-4 rounded-md ${
-          status.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 
-          status.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 
-          status.type === 'warning' ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' :
-          'bg-blue-50 text-blue-700 border border-blue-200'
-        }`}>
-          {status.message}
-        </div>
-      )}
-
-      {validationMessages.length > 0 && (
-        <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-md">
-          <h3 className="font-medium text-yellow-800 mb-2">Peringatan jadwal:</h3>
-          <div className="max-h-60 overflow-y-auto">
-            <ul className="list-disc pl-5 space-y-1 text-sm text-yellow-700">
-              {validationMessages.map((message, index) => (
-                <li key={index}>{message}</li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      )}
-      
       {/* Peringatan untuk hari dengan jumlah pertandingan tidak tepat 3 */}
       {pertandingan.length > 0 && hariDenganPertandinganTidakTepat3.length > 0 && (
         <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-md">

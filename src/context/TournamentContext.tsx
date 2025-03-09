@@ -101,7 +101,7 @@ interface TournamentContextType {
   generateJadwal: (startDate?: Date) => { isValid: boolean; messages: string[] };
   validateSchedule: () => { isValid: boolean; messages: string[] };
   optimizeSchedule: () => { isValid: boolean; messages: string[]; optimized: boolean; optimizationCount?: number };
-  fixExistingSchedule: () => { isValid: boolean; messages: string[]; fixed: boolean; recreated?: boolean };
+  fixExistingSchedule: () => { isValid: boolean; messages: string[]; fixed: boolean; recreated?: boolean; manualFix?: boolean; error?: boolean };
   getPertandinganByGrup: (grup: string) => Pertandingan[];
   getPertandinganByTanggal: (tanggal: string) => Pertandingan[];
   getPertandinganByTim: (timId: string) => Pertandingan[];
@@ -2513,7 +2513,7 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
 
   // Fungsi untuk memperbaiki jadwal yang sudah ada
   const fixExistingSchedule = () => {
-    console.log("MEMPERBAIKI JADWAL YANG SUDAH ADA");
+    console.log("MEMPERBAIKI JADWAL YANG SUDAH ADA - PENDEKATAN SUPER AGRESIF");
     
     // Jika tidak ada pertandingan, tidak ada yang perlu diperbaiki
     if (pertandingan.length === 0) {
@@ -2541,44 +2541,34 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
     console.log("Jadwal tidak valid, mulai memperbaiki...");
     console.log("Pelanggaran:", validationResult.messages);
     
-    // Gunakan forceFixSchedule untuk memperbaiki jadwal
-    const fixedSchedule = forceFixSchedule();
+    // PENDEKATAN SUPER AGRESIF: Hapus semua jadwal dan buat ulang dari awal
+    console.log("Menggunakan pendekatan super agresif: Hapus semua jadwal dan buat ulang dari awal");
     
-    // Update state dengan jadwal yang diperbaiki
-    setPertandingan(fixedSchedule);
-    
-    // Validasi jadwal yang sudah diperbaiki
-    const newValidationResult = validateSchedule();
-    
-    if (newValidationResult.isValid) {
-      console.log("Jadwal berhasil diperbaiki!");
-      return {
-        isValid: true,
-        messages: ["Jadwal berhasil diperbaiki!"],
-        fixed: true
-      };
-    } else {
-      console.log("Jadwal masih tidak valid setelah diperbaiki. Pelanggaran:", newValidationResult.messages);
-      
-      // Jika masih ada pelanggaran, coba pendekatan yang lebih agresif
-      // Hapus semua jadwal dan buat ulang
-      console.log("Mencoba pendekatan yang lebih agresif: Hapus semua jadwal dan buat ulang");
-      
-      // Simpan pertandingan yang sudah ada
+    try {
+      // Simpan pertandingan yang sudah ada untuk referensi
       const existingMatches = [...pertandingan];
+      console.log(`Total pertandingan yang ada: ${existingMatches.length}`);
       
       // Hapus semua jadwal
+      console.log("Menghapus semua jadwal...");
       clearSchedule();
       
-      // Buat jadwal baru
-      const startDate = new Date(existingMatches[0]?.tanggal || '2025-04-01');
+      // Tentukan tanggal mulai
+      // Gunakan tanggal dari pertandingan pertama jika ada, atau tanggal default
+      const startDate = existingMatches.length > 0 
+        ? new Date(existingMatches.sort((a, b) => a.tanggal.localeCompare(b.tanggal))[0].tanggal) 
+        : new Date('2025-04-01');
+      
+      console.log(`Tanggal mulai: ${startDate.toISOString().split('T')[0]}`);
       
       // Siapkan daftar pertandingan yang perlu dijadwalkan
       const matchesToSchedule: { timA: string; timB: string; grup: string }[] = [];
       
       // Untuk setiap grup, buat daftar pertandingan round-robin
+      console.log("Membuat daftar pertandingan round-robin...");
       Object.entries(grupData).forEach(([grup, _]) => {
         const timDalamGrup = teams.filter(team => team.grup === grup);
+        console.log(`Grup ${grup}: ${timDalamGrup.length} tim`);
         
         // Round-robin algorithm
         for (let i = 0; i < timDalamGrup.length - 1; i++) {
@@ -2592,13 +2582,24 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
         }
       });
       
+      console.log(`Total pertandingan yang perlu dijadwalkan: ${matchesToSchedule.length}`);
+      
       // Jadwalkan pertandingan dengan algoritma baru
+      console.log("Menjadwalkan pertandingan dengan algoritma baru...");
       const scheduledMatches = findOptimalSchedule(matchesToSchedule, startDate);
+      
+      console.log(`Total pertandingan yang berhasil dijadwalkan: ${scheduledMatches.length}`);
+      
+      // Periksa apakah semua pertandingan berhasil dijadwalkan
+      if (scheduledMatches.length !== matchesToSchedule.length) {
+        console.error(`PERINGATAN: Tidak semua pertandingan berhasil dijadwalkan. Dijadwalkan: ${scheduledMatches.length}, Dibutuhkan: ${matchesToSchedule.length}`);
+      }
       
       // Update state
       setPertandingan(scheduledMatches);
       
       // Validasi jadwal baru
+      console.log("Memvalidasi jadwal baru...");
       const finalValidationResult = validateSchedule();
       
       if (finalValidationResult.isValid) {
@@ -2610,14 +2611,133 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
           recreated: true
         };
       } else {
-        console.log("Jadwal masih tidak valid setelah dibuat ulang. Pelanggaran:", finalValidationResult.messages);
-        return {
-          isValid: false,
-          messages: ["Jadwal masih tidak valid setelah dibuat ulang. Silakan hubungi administrator."],
-          fixed: false,
-          recreated: true
-        };
+        console.error("Jadwal masih tidak valid setelah dibuat ulang. Pelanggaran:", finalValidationResult.messages);
+        
+        // Coba pendekatan manual untuk memperbaiki jadwal
+        console.log("Mencoba pendekatan manual untuk memperbaiki jadwal...");
+        
+        // Dapatkan semua tanggal yang tersedia dalam jadwal
+        const dates = [...new Set(scheduledMatches.map(p => p.tanggal))].sort();
+        const firstDayStr = dates[0];
+        
+        // Pastikan hari pertama memiliki tepat 2 pertandingan
+        const firstDayMatches = scheduledMatches.filter(match => match.tanggal === firstDayStr);
+        
+        if (firstDayMatches.length !== jamPertandinganHariPertama.length) {
+          console.log(`Hari pertama memiliki ${firstDayMatches.length} pertandingan, seharusnya ${jamPertandinganHariPertama.length}`);
+          
+          // Jika hari pertama memiliki terlalu banyak pertandingan, pindahkan ke hari berikutnya
+          if (firstDayMatches.length > jamPertandinganHariPertama.length) {
+            const matchesToMove = firstDayMatches.slice(jamPertandinganHariPertama.length);
+            const nextDayStr = dates[1] || new Date(new Date(firstDayStr).getTime() + 86400000).toISOString().split('T')[0];
+            
+            console.log(`Memindahkan ${matchesToMove.length} pertandingan dari hari pertama ke ${nextDayStr}`);
+            
+            // Pindahkan pertandingan
+            const updatedMatches = scheduledMatches.map(match => {
+              if (matchesToMove.some(m => m.id === match.id)) {
+                return {
+                  ...match,
+                  tanggal: nextDayStr,
+                  waktu: jamPertandingan[0] // Gunakan waktu pertama
+                };
+              }
+              return match;
+            });
+            
+            setPertandingan(updatedMatches);
+          }
+          // Jika hari pertama memiliki terlalu sedikit pertandingan, tambahkan dari hari berikutnya
+          else if (firstDayMatches.length < jamPertandinganHariPertama.length) {
+            const nextDayStr = dates[1];
+            if (nextDayStr) {
+              const nextDayMatches = scheduledMatches.filter(match => match.tanggal === nextDayStr);
+              const matchesToMove = nextDayMatches.slice(0, jamPertandinganHariPertama.length - firstDayMatches.length);
+              
+              console.log(`Memindahkan ${matchesToMove.length} pertandingan dari ${nextDayStr} ke hari pertama`);
+              
+              // Pindahkan pertandingan
+              const updatedMatches = scheduledMatches.map(match => {
+                if (matchesToMove.some(m => m.id === match.id)) {
+                  return {
+                    ...match,
+                    tanggal: firstDayStr,
+                    waktu: jamPertandinganHariPertama[firstDayMatches.length] // Gunakan waktu yang tersedia
+                  };
+                }
+                return match;
+              });
+              
+              setPertandingan(updatedMatches);
+            }
+          }
+        }
+        
+        // Pastikan waktu pertandingan di hari pertama sesuai
+        const updatedFirstDayMatches = scheduledMatches.filter(match => match.tanggal === firstDayStr);
+        
+        if (updatedFirstDayMatches.length === jamPertandinganHariPertama.length) {
+          const updatedMatches = [...scheduledMatches];
+          
+          // Pastikan waktu pertandingan sesuai
+          for (let i = 0; i < updatedFirstDayMatches.length; i++) {
+            const match = updatedFirstDayMatches[i];
+            const expectedTime = jamPertandinganHariPertama[i];
+            
+            if (match.waktu !== expectedTime) {
+              const matchIndex = updatedMatches.findIndex(m => m.id === match.id);
+              if (matchIndex !== -1) {
+                updatedMatches[matchIndex] = {
+                  ...updatedMatches[matchIndex],
+                  waktu: expectedTime
+                };
+              }
+            }
+          }
+          
+          setPertandingan(updatedMatches);
+        }
+        
+        // Validasi lagi
+        const manualFixValidationResult = validateSchedule();
+        
+        if (manualFixValidationResult.isValid) {
+          console.log("Jadwal berhasil diperbaiki secara manual!");
+          return {
+            isValid: true,
+            messages: ["Jadwal berhasil diperbaiki secara manual!"],
+            fixed: true,
+            recreated: true,
+            manualFix: true
+          };
+        } else {
+          console.error("Jadwal masih tidak valid setelah perbaikan manual. Pelanggaran:", manualFixValidationResult.messages);
+          
+          // Jika masih gagal, kembalikan jadwal asli
+          console.log("Mengembalikan jadwal asli...");
+          setPertandingan(existingMatches);
+          
+          return {
+            isValid: false,
+            messages: [
+              "Gagal memperbaiki jadwal. Silakan hubungi administrator.",
+              "Detail error: " + manualFixValidationResult.messages.join(", ")
+            ],
+            fixed: false,
+            recreated: true,
+            manualFix: true,
+            error: true
+          };
+        }
       }
+    } catch (error) {
+      console.error("Error saat memperbaiki jadwal:", error);
+      return {
+        isValid: false,
+        messages: ["Terjadi kesalahan saat memperbaiki jadwal. Silakan hubungi administrator."],
+        fixed: false,
+        error: true
+      };
     }
   };
 
