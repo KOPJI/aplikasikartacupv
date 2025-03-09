@@ -1,5 +1,10 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { saveHeadToHeadToFirestore, getHeadToHeadFromFirestore } from '../services/firebase';
+import { 
+  saveHeadToHeadToFirestore, 
+  getHeadToHeadFromFirestore, 
+  saveGoalToFirestore, 
+  saveCardToFirestore 
+} from '../services/firebase';
 
 // Definisi tipe data
 export interface Pemain {
@@ -119,7 +124,7 @@ interface TournamentContextType {
   getTimLolosPerempat: () => { grup: string, tim: Tim[] }[];
   getPertandinganBabakGugurByTahap: (tahap: BabakGugurTahap) => PertandinganBabakGugur[];
   getPertandinganBabakGugurById: (id: string) => PertandinganBabakGugur | undefined;
-  simpanHasilBabakGugur: (hasil: Omit<HasilPertandingan, "id">) => void;
+  simpanHasilBabakGugur: (hasil: Omit<HasilPertandingan, "id">) => Promise<void>;
   getJuara: () => Tim | null;
   getRunnerUp: () => Tim | null;
 
@@ -1495,7 +1500,11 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
     );
     
     // Update statistik pemain (gol dan kartu)
-    updatePemainStatistik(hasil);
+    try {
+      await updatePemainStatistik(hasil);
+    } catch (error) {
+      console.error("Error saat memperbarui statistik pemain:", error);
+    }
     
     // Update klasemen (async)
     try {
@@ -1506,12 +1515,16 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Update statistik pemain setelah pertandingan
-  const updatePemainStatistik = (hasil: Omit<HasilPertandingan, "id">) => {
+  const updatePemainStatistik = async (hasil: Omit<HasilPertandingan, "id">) => {
     // Buat salinan teams untuk dimodifikasi
     const updatedTeams = [...teams];
     
-    // Update gol
-    hasil.pencetakGol.forEach(({ pemainId, jumlah }) => {
+    // Update gol dan simpan ke Firestore
+    for (const goalData of hasil.pencetakGol) {
+      const { pemainId, jumlah } = goalData;
+      
+      // Cari pemain di teams
+      let pemainFound = false;
       for (let i = 0; i < updatedTeams.length; i++) {
         const pemainIndex = updatedTeams[i].pemain.findIndex(p => p.id === pemainId);
         if (pemainIndex !== -1) {
@@ -1521,38 +1534,173 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
             ...updatedTeams[i].pemain[pemainIndex],
             golTotal: currentGoals + jumlah
           };
-          console.log(`Pemain ${updatedTeams[i].pemain[pemainIndex].nama} mencetak ${jumlah} gol, total: ${currentGoals + jumlah}`);
+          
+          const pemain = updatedTeams[i].pemain[pemainIndex];
+          console.log(`Pemain ${pemain.nama} mencetak ${jumlah} gol, total: ${currentGoals + jumlah}`);
+          
+          // Simpan data gol ke Firestore
+          try {
+            await saveGoalToFirestore({
+              id: crypto.randomUUID(),
+              pemainId,
+              pertandinganId: hasil.pertandinganId,
+              jumlah,
+              timId: updatedTeams[i].id,
+              tanggal: new Date().toISOString(),
+              namaTimA: getTeam(pertandingan.find(p => p.id === hasil.pertandinganId)?.timA || '')?.nama || '',
+              namaTimB: getTeam(pertandingan.find(p => p.id === hasil.pertandinganId)?.timB || '')?.nama || '',
+              namaPemain: pemain.nama,
+              nomorPunggung: pemain.nomorPunggung,
+              totalGol: currentGoals + jumlah
+            });
+            console.log(`Data gol untuk pemain ${pemain.nama} berhasil disimpan ke Firestore`);
+          } catch (error) {
+            console.error(`Error menyimpan data gol untuk pemain ${pemain.nama}:`, error);
+          }
+          
+          pemainFound = true;
           break;
         }
       }
-    });
+      
+      if (!pemainFound) {
+        console.warn(`Pemain dengan ID ${pemainId} tidak ditemukan`);
+      }
+    }
     
-    // Update kartu
-    hasil.kartu.forEach(({ pemainId, jenis, jumlah }) => {
+    // Update kartu dan simpan ke Firestore
+    for (const cardData of hasil.kartu) {
+      const { pemainId, jenis, jumlah } = cardData;
+      
+      // Cari pemain di teams
+      let pemainFound = false;
       for (let i = 0; i < updatedTeams.length; i++) {
         const pemainIndex = updatedTeams[i].pemain.findIndex(p => p.id === pemainId);
         if (pemainIndex !== -1) {
+          const pemain = updatedTeams[i].pemain[pemainIndex];
+          
           if (jenis === 'kuning') {
             // Pastikan nilai awal adalah 0 jika belum ada
-            const currentYellows = updatedTeams[i].pemain[pemainIndex].kartuKuning || 0;
+            const currentYellows = pemain.kartuKuning || 0;
             updatedTeams[i].pemain[pemainIndex] = {
-              ...updatedTeams[i].pemain[pemainIndex],
+              ...pemain,
               kartuKuning: currentYellows + jumlah
             };
-            console.log(`Pemain ${updatedTeams[i].pemain[pemainIndex].nama} mendapat ${jumlah} kartu kuning, total: ${currentYellows + jumlah}`);
+            
+            console.log(`Pemain ${pemain.nama} mendapat ${jumlah} kartu kuning, total: ${currentYellows + jumlah}`);
+            
+            // Simpan data kartu kuning ke Firestore
+            try {
+              await saveCardToFirestore({
+                id: crypto.randomUUID(),
+                pemainId,
+                pertandinganId: hasil.pertandinganId,
+                jenis: 'kuning',
+                jumlah,
+                timId: updatedTeams[i].id,
+                tanggal: new Date().toISOString(),
+                namaTimA: getTeam(pertandingan.find(p => p.id === hasil.pertandinganId)?.timA || '')?.nama || '',
+                namaTimB: getTeam(pertandingan.find(p => p.id === hasil.pertandinganId)?.timB || '')?.nama || '',
+                namaPemain: pemain.nama,
+                nomorPunggung: pemain.nomorPunggung,
+                totalKartu: currentYellows + jumlah
+              });
+              console.log(`Data kartu kuning untuk pemain ${pemain.nama} berhasil disimpan ke Firestore`);
+              
+              // Cek apakah pemain terkena larangan bermain (3 kartu kuning)
+              const newTotalYellows = currentYellows + jumlah;
+              if (newTotalYellows >= 3) {
+                console.log(`Pemain ${pemain.nama} terkena larangan bermain karena akumulasi ${newTotalYellows} kartu kuning`);
+                
+                // Simpan data larangan bermain ke Firestore
+                try {
+                  await saveCardToFirestore({
+                    id: crypto.randomUUID(),
+                    pemainId,
+                    pertandinganId: hasil.pertandinganId,
+                    jenis: 'larangan',
+                    jumlah: 1,
+                    timId: updatedTeams[i].id,
+                    tanggal: new Date().toISOString(),
+                    namaTimA: getTeam(pertandingan.find(p => p.id === hasil.pertandinganId)?.timA || '')?.nama || '',
+                    namaTimB: getTeam(pertandingan.find(p => p.id === hasil.pertandinganId)?.timB || '')?.nama || '',
+                    namaPemain: pemain.nama,
+                    nomorPunggung: pemain.nomorPunggung,
+                    alasan: 'Akumulasi 3 Kartu Kuning'
+                  });
+                  console.log(`Data larangan bermain untuk pemain ${pemain.nama} berhasil disimpan ke Firestore`);
+                } catch (error) {
+                  console.error(`Error menyimpan data larangan bermain untuk pemain ${pemain.nama}:`, error);
+                }
+              }
+            } catch (error) {
+              console.error(`Error menyimpan data kartu kuning untuk pemain ${pemain.nama}:`, error);
+            }
           } else if (jenis === 'merah') {
             // Pastikan nilai awal adalah 0 jika belum ada
-            const currentReds = updatedTeams[i].pemain[pemainIndex].kartuMerah || 0;
+            const currentReds = pemain.kartuMerah || 0;
             updatedTeams[i].pemain[pemainIndex] = {
-              ...updatedTeams[i].pemain[pemainIndex],
+              ...pemain,
               kartuMerah: currentReds + jumlah
             };
-            console.log(`Pemain ${updatedTeams[i].pemain[pemainIndex].nama} mendapat ${jumlah} kartu merah, total: ${currentReds + jumlah}`);
+            
+            console.log(`Pemain ${pemain.nama} mendapat ${jumlah} kartu merah, total: ${currentReds + jumlah}`);
+            
+            // Simpan data kartu merah ke Firestore
+            try {
+              await saveCardToFirestore({
+                id: crypto.randomUUID(),
+                pemainId,
+                pertandinganId: hasil.pertandinganId,
+                jenis: 'merah',
+                jumlah,
+                timId: updatedTeams[i].id,
+                tanggal: new Date().toISOString(),
+                namaTimA: getTeam(pertandingan.find(p => p.id === hasil.pertandinganId)?.timA || '')?.nama || '',
+                namaTimB: getTeam(pertandingan.find(p => p.id === hasil.pertandinganId)?.timB || '')?.nama || '',
+                namaPemain: pemain.nama,
+                nomorPunggung: pemain.nomorPunggung,
+                totalKartu: currentReds + jumlah
+              });
+              console.log(`Data kartu merah untuk pemain ${pemain.nama} berhasil disimpan ke Firestore`);
+              
+              // Pemain terkena larangan bermain karena kartu merah
+              console.log(`Pemain ${pemain.nama} terkena larangan bermain karena kartu merah`);
+              
+              // Simpan data larangan bermain ke Firestore
+              try {
+                await saveCardToFirestore({
+                  id: crypto.randomUUID(),
+                  pemainId,
+                  pertandinganId: hasil.pertandinganId,
+                  jenis: 'larangan',
+                  jumlah: 1,
+                  timId: updatedTeams[i].id,
+                  tanggal: new Date().toISOString(),
+                  namaTimA: getTeam(pertandingan.find(p => p.id === hasil.pertandinganId)?.timA || '')?.nama || '',
+                  namaTimB: getTeam(pertandingan.find(p => p.id === hasil.pertandinganId)?.timB || '')?.nama || '',
+                  namaPemain: pemain.nama,
+                  nomorPunggung: pemain.nomorPunggung,
+                  alasan: 'Kartu Merah'
+                });
+                console.log(`Data larangan bermain untuk pemain ${pemain.nama} berhasil disimpan ke Firestore`);
+              } catch (error) {
+                console.error(`Error menyimpan data larangan bermain untuk pemain ${pemain.nama}:`, error);
+              }
+            } catch (error) {
+              console.error(`Error menyimpan data kartu merah untuk pemain ${pemain.nama}:`, error);
+            }
           }
+          
+          pemainFound = true;
           break;
         }
       }
-    });
+      
+      if (!pemainFound) {
+        console.warn(`Pemain dengan ID ${pemainId} tidak ditemukan`);
+      }
+    }
     
     // Simpan perubahan ke state
     setTeams(updatedTeams);
@@ -1889,20 +2037,23 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
     return pertandinganBabakGugur.find(p => p.id === id);
   };
 
-  // Simpan hasil babak gugur
-  const simpanHasilBabakGugur = (hasil: Omit<HasilPertandingan, "id">) => {
+  // Fungsi untuk menyimpan hasil pertandingan babak gugur
+  const simpanHasilBabakGugur = async (hasil: Omit<HasilPertandingan, "id">) => {
     const hasilWithId: HasilPertandingan = {
       ...hasil,
       id: crypto.randomUUID()
     };
     
-    // Update hasil
-    const updatedMatches = pertandinganBabakGugur.map(p => {
-      if (p.id === hasil.pertandinganId) {
-        return { ...p, hasil: hasilWithId };
+    // Buat salinan pertandingan babak gugur untuk dimodifikasi
+    const updatedMatches = [...pertandinganBabakGugur];
+    
+    // Update hasil pertandingan
+    for (let i = 0; i < updatedMatches.length; i++) {
+      if (updatedMatches[i].id === hasil.pertandinganId) {
+        updatedMatches[i] = { ...updatedMatches[i], hasil: hasilWithId };
+        break;
       }
-      return p;
-    });
+    }
     
     // Jika ada pertandingan selanjutnya yang bergantung pada hasil ini
     const currentMatch = pertandinganBabakGugur.find(p => p.id === hasil.pertandinganId);
@@ -1932,11 +2083,15 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
       }
     }
     
-    // Update statistik pemain
-    updatePemainStatistik(hasil);
-    
     // Update state
     setPertandinganBabakGugur(updatedMatches);
+    
+    // Update statistik pemain (gol dan kartu)
+    try {
+      await updatePemainStatistik(hasil);
+    } catch (error) {
+      console.error("Error saat memperbarui statistik pemain:", error);
+    }
   };
 
   // Get juara (pemenang final)
