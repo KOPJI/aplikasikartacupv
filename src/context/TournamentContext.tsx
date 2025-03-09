@@ -1298,11 +1298,13 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
       for (let i = 0; i < updatedTeams.length; i++) {
         const pemainIndex = updatedTeams[i].pemain.findIndex(p => p.id === pemainId);
         if (pemainIndex !== -1) {
+          // Pastikan nilai awal adalah 0 jika belum ada
           const currentGoals = updatedTeams[i].pemain[pemainIndex].golTotal || 0;
           updatedTeams[i].pemain[pemainIndex] = {
             ...updatedTeams[i].pemain[pemainIndex],
             golTotal: currentGoals + jumlah
           };
+          console.log(`Pemain ${updatedTeams[i].pemain[pemainIndex].nama} mencetak ${jumlah} gol, total: ${currentGoals + jumlah}`);
           break;
         }
       }
@@ -1314,23 +1316,28 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
         const pemainIndex = updatedTeams[i].pemain.findIndex(p => p.id === pemainId);
         if (pemainIndex !== -1) {
           if (jenis === 'kuning') {
+            // Pastikan nilai awal adalah 0 jika belum ada
             const currentYellows = updatedTeams[i].pemain[pemainIndex].kartuKuning || 0;
             updatedTeams[i].pemain[pemainIndex] = {
               ...updatedTeams[i].pemain[pemainIndex],
               kartuKuning: currentYellows + jumlah
             };
-          } else {
+            console.log(`Pemain ${updatedTeams[i].pemain[pemainIndex].nama} mendapat ${jumlah} kartu kuning, total: ${currentYellows + jumlah}`);
+          } else if (jenis === 'merah') {
+            // Pastikan nilai awal adalah 0 jika belum ada
             const currentReds = updatedTeams[i].pemain[pemainIndex].kartuMerah || 0;
             updatedTeams[i].pemain[pemainIndex] = {
               ...updatedTeams[i].pemain[pemainIndex],
               kartuMerah: currentReds + jumlah
             };
+            console.log(`Pemain ${updatedTeams[i].pemain[pemainIndex].nama} mendapat ${jumlah} kartu merah, total: ${currentReds + jumlah}`);
           }
           break;
         }
       }
     });
     
+    // Simpan perubahan ke state
     setTeams(updatedTeams);
   };
 
@@ -1429,14 +1436,27 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
   // Mendapatkan daftar pencetak gol terbanyak
   const getPencetakGolTerbanyak = (limit = 10) => {
     const allPlayers: Pemain[] = [];
+    
+    // Kumpulkan semua pemain dari semua tim
     teams.forEach(team => {
-      allPlayers.push(...team.pemain);
+      // Tambahkan informasi tim ke setiap pemain
+      const playersWithTeam = team.pemain.map(player => ({
+        ...player,
+        timId: team.id,
+        timNama: team.nama
+      }));
+      allPlayers.push(...playersWithTeam);
     });
     
-    return allPlayers
+    // Filter pemain yang mencetak gol dan urutkan berdasarkan jumlah gol
+    const scorers = allPlayers
       .filter(p => (p.golTotal || 0) > 0) // Hanya pemain yang mencetak gol
       .sort((a, b) => (b.golTotal || 0) - (a.golTotal || 0))
       .slice(0, limit);
+    
+    console.log("Daftar pencetak gol:", scorers.map(p => `${p.nama}: ${p.golTotal} gol`));
+    
+    return scorers;
   };
 
   // Mendapatkan tim yang lolos ke perempat final (2 teratas dari setiap grup)

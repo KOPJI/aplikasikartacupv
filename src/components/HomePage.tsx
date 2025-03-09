@@ -316,27 +316,25 @@ const HomePage = () => {
             
             <div className="p-4">
               {playersWithCards.length > 0 ? (
-                <div className="space-y-3">
-                  {playersWithCards.map((pemain) => (
-                    <div key={pemain.id} className="flex items-center p-3 rounded-lg bg-gray-50">
-                      <div className="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mr-3">
-                        <span className="text-gray-800 font-bold">{pemain.nomorPunggung}</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {playersWithCards.slice(0, 6).map((pemain) => (
+                    <div key={pemain.id} className="flex items-center p-3 rounded-lg bg-gray-50 border border-gray-100">
+                      <div className="flex-shrink-0 w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mr-3 font-bold text-gray-700">
+                        {pemain.nomorPunggung}
                       </div>
                       <div className="flex-grow">
                         <div className="text-sm font-medium text-gray-900">{pemain.nama}</div>
                         <div className="text-xs text-gray-600">{pemain.teamName}</div>
                       </div>
-                      <div className="flex-shrink-0 flex space-x-2">
+                      <div className="flex space-x-2">
                         {pemain.kartuKuning && pemain.kartuKuning > 0 && (
-                          <div className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full flex items-center">
-                            <div className="w-3 h-4 bg-yellow-400 mr-1 rounded-sm"></div>
-                            <span className="text-xs font-medium">{pemain.kartuKuning}</span>
+                          <div className="w-6 h-8 bg-yellow-400 rounded-sm flex items-center justify-center text-xs font-bold text-white">
+                            {pemain.kartuKuning}
                           </div>
                         )}
                         {pemain.kartuMerah && pemain.kartuMerah > 0 && (
-                          <div className="px-2 py-1 bg-red-100 text-red-800 rounded-full flex items-center">
-                            <div className="w-3 h-4 bg-red-600 mr-1 rounded-sm"></div>
-                            <span className="text-xs font-medium">{pemain.kartuMerah}</span>
+                          <div className="w-6 h-8 bg-red-600 rounded-sm flex items-center justify-center text-xs font-bold text-white">
+                            {pemain.kartuMerah}
                           </div>
                         )}
                       </div>
@@ -346,6 +344,17 @@ const HomePage = () => {
               ) : (
                 <div className="text-center py-6 text-gray-500">
                   Belum ada pemain yang mendapatkan kartu
+                </div>
+              )}
+              
+              {playersWithCards.length > 6 && (
+                <div className="mt-4 text-center">
+                  <Link to="/klasemen" className="text-yellow-600 hover:text-yellow-800 font-medium inline-flex items-center">
+                    Lihat semua pemain dengan kartu
+                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                  </Link>
                 </div>
               )}
             </div>
@@ -440,7 +449,7 @@ const HomePage = () => {
             </div>
           </div>
 
-          {/* Banned Players */}
+          {/* Pemain Dilarang Bermain */}
           <div className="bg-white rounded-xl shadow-lg overflow-hidden border-t-4 border-red-600">
             <div className="bg-gradient-to-r from-red-600 to-red-700 p-4 text-white">
               <h2 className="text-xl font-bold flex items-center">
@@ -476,10 +485,10 @@ const HomePage = () => {
               )}
               
               <div className="mt-4 bg-red-50 p-3 rounded-lg">
-                <h3 className="text-sm font-bold text-red-800 mb-2">Aturan Larangan Bermain:</h3>
+                <h3 className="text-sm font-bold text-red-800 mb-1">Aturan Larangan Bermain:</h3>
                 <ul className="text-xs text-red-700 space-y-1 list-disc pl-4">
-                  <li>Pemain yang mendapatkan 3 kartu kuning akan dilarang bermain di pertandingan selanjutnya</li>
-                  <li>Pemain yang mendapatkan kartu merah langsung akan dilarang bermain di pertandingan selanjutnya</li>
+                  <li>Pemain yang mendapatkan 3 kartu kuning dilarang bermain di pertandingan selanjutnya</li>
+                  <li>Pemain yang mendapatkan kartu merah langsung dilarang bermain di pertandingan selanjutnya</li>
                 </ul>
               </div>
             </div>
