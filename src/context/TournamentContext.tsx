@@ -133,6 +133,44 @@ interface TournamentContextType {
   loadTeamsFromFirestore: (teamsData: any[], playersData: any[]) => Promise<void>;
   loadMatchesFromFirestore: (matchesData: any[]) => Promise<void>;
   loadKnockoutMatchesFromFirestore: (knockoutData: any[]) => Promise<void>;
+
+  // Fungsi untuk menghitung statistik waktu istirahat tim
+  calculateTeamRestStats: (schedule: Pertandingan[]) => { 
+    teamStats: { 
+      [teamId: string]: {
+        totalRestDays: number;
+        averageRestDays: number;
+        minRestDays: number;
+        maxRestDays: number;
+        restPeriods: number[];
+      }
+    };
+    overallStats: {
+      averageRestDays: number;
+      minRestDays: number;
+      maxRestDays: number;
+      stdDeviation: number;
+    }
+  };
+
+  // Tambahkan fungsi untuk mendapatkan statistik istirahat tim
+  getTeamRestStatistics: () => {
+    teamStats: {
+      [teamId: string]: {
+        totalRestDays: number;
+        averageRestDays: number;
+        minRestDays: number;
+        maxRestDays: number;
+        restPeriods: number[];
+      }
+    };
+    overallStats: {
+      averageRestDays: number;
+      minRestDays: number;
+      maxRestDays: number;
+      stdDeviation: number;
+    }
+  };
 }
 
 const TournamentContext = createContext<TournamentContextType | undefined>(undefined);
@@ -2689,6 +2727,112 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Fungsi untuk menghitung statistik waktu istirahat tim
+  const calculateTeamRestStats = (schedule: Pertandingan[]): { 
+    teamStats: { 
+      [teamId: string]: {
+        totalRestDays: number;
+        averageRestDays: number;
+        minRestDays: number;
+        maxRestDays: number;
+        restPeriods: number[];
+      }
+    };
+    overallStats: {
+      averageRestDays: number;
+      minRestDays: number;
+      maxRestDays: number;
+      stdDeviation: number;
+    }
+  } => {
+    const teamStats: {
+      [teamId: string]: {
+        totalRestDays: number;
+        averageRestDays: number;
+        minRestDays: number;
+        maxRestDays: number;
+        restPeriods: number[];
+      }
+    } = {};
+
+    // Inisialisasi statistik untuk setiap tim
+    teams.forEach(team => {
+      teamStats[team.id] = {
+        totalRestDays: 0,
+        averageRestDays: 0,
+        minRestDays: Infinity,
+        maxRestDays: -Infinity,
+        restPeriods: []
+      };
+    });
+
+    // Kelompokkan pertandingan berdasarkan tim
+    const teamMatches: { [teamId: string]: Pertandingan[] } = {};
+    schedule.forEach(match => {
+      if (!teamMatches[match.timA]) teamMatches[match.timA] = [];
+      if (!teamMatches[match.timB]) teamMatches[match.timB] = [];
+      teamMatches[match.timA].push(match);
+      teamMatches[match.timB].push(match);
+    });
+
+    // Hitung statistik untuk setiap tim
+    Object.entries(teamMatches).forEach(([teamId, matches]) => {
+      // Urutkan pertandingan berdasarkan tanggal
+      const sortedMatches = matches.sort((a, b) => a.tanggal.localeCompare(b.tanggal));
+      
+      // Hitung periode istirahat
+      for (let i = 1; i < sortedMatches.length; i++) {
+        const prevMatch = sortedMatches[i - 1];
+        const currentMatch = sortedMatches[i];
+        const restDays = daysBetween(prevMatch.tanggal, currentMatch.tanggal);
+        
+        teamStats[teamId].restPeriods.push(restDays);
+        teamStats[teamId].totalRestDays += restDays;
+        teamStats[teamId].minRestDays = Math.min(teamStats[teamId].minRestDays, restDays);
+        teamStats[teamId].maxRestDays = Math.max(teamStats[teamId].maxRestDays, restDays);
+      }
+
+      // Hitung rata-rata
+      if (teamStats[teamId].restPeriods.length > 0) {
+        teamStats[teamId].averageRestDays = teamStats[teamId].totalRestDays / teamStats[teamId].restPeriods.length;
+      }
+
+      // Jika tidak ada periode istirahat, setel nilai default
+      if (teamStats[teamId].minRestDays === Infinity) teamStats[teamId].minRestDays = 0;
+      if (teamStats[teamId].maxRestDays === -Infinity) teamStats[teamId].maxRestDays = 0;
+    });
+
+    // Hitung statistik keseluruhan
+    const allRestPeriods = Object.values(teamStats).flatMap(stat => stat.restPeriods);
+    const overallAverage = allRestPeriods.length > 0 
+      ? allRestPeriods.reduce((a, b) => a + b, 0) / allRestPeriods.length 
+      : 0;
+    
+    const overallMin = Math.min(...Object.values(teamStats).map(stat => stat.minRestDays));
+    const overallMax = Math.max(...Object.values(teamStats).map(stat => stat.maxRestDays));
+    
+    // Hitung standar deviasi
+    const variance = allRestPeriods.length > 0
+      ? allRestPeriods.reduce((acc, val) => acc + Math.pow(val - overallAverage, 2), 0) / allRestPeriods.length
+      : 0;
+    const stdDeviation = Math.sqrt(variance);
+
+    return {
+      teamStats,
+      overallStats: {
+        averageRestDays: overallAverage,
+        minRestDays: overallMin,
+        maxRestDays: overallMax,
+        stdDeviation
+      }
+    };
+  };
+
+  // Tambahkan fungsi untuk mendapatkan statistik istirahat tim
+  const getTeamRestStatistics = () => {
+    return calculateTeamRestStats(pertandingan);
+  };
+
   return (
     <TournamentContext.Provider value={{
       teams,
@@ -2739,7 +2883,13 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
       // Firebase Integration
       loadTeamsFromFirestore,
       loadMatchesFromFirestore,
-      loadKnockoutMatchesFromFirestore
+      loadKnockoutMatchesFromFirestore,
+
+      // Fungsi untuk menghitung statistik waktu istirahat tim
+      calculateTeamRestStats,
+
+      // Tambahkan fungsi untuk mendapatkan statistik istirahat tim
+      getTeamRestStatistics
     }}>
       {children}
     </TournamentContext.Provider>
