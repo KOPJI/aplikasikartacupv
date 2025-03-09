@@ -58,7 +58,16 @@ const JadwalPertandingan = () => {
   const pertandinganSelesai = pertandingan
     .filter(p => selectedGrup === 'all' || p.grup === selectedGrup)
     .filter(p => p.hasil && p.hasil.selesai).length;
-
+    
+  // Hitung hari dengan jumlah pertandingan tidak tepat 3
+  const hariDenganPertandinganTidakTepat3 = Object.entries(
+    availableDates.reduce((acc, date) => {
+      const matchesOnDate = pertandingan.filter(m => m.tanggal === date).length;
+      acc[date] = matchesOnDate;
+      return acc;
+    }, {} as Record<string, number>)
+  ).filter(([_, count]) => count !== 3);
+  
   // Fungsi untuk membuat jadwal
   const handleGenerateJadwal = () => {
     try {
@@ -371,6 +380,34 @@ const JadwalPertandingan = () => {
           </div>
         </div>
       )}
+      
+      {/* Peringatan untuk hari dengan jumlah pertandingan tidak tepat 3 */}
+      {pertandingan.length > 0 && hariDenganPertandinganTidakTepat3.length > 0 && (
+        <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-md">
+          <div className="flex items-start">
+            <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
+            <div>
+              <h3 className="font-medium text-yellow-800 mb-2">Peringatan:</h3>
+              <p className="text-yellow-700 mb-3">
+                Beberapa hari memiliki jumlah pertandingan tidak tepat 3. Ini hanya diperbolehkan untuk jadwal yang tersisa dan tidak ada pilihan lain.
+              </p>
+              <div className="bg-white rounded-md p-3 border border-yellow-100">
+                <h4 className="font-medium text-yellow-800 mb-2 text-sm">Hari dengan jumlah pertandingan tidak tepat 3:</h4>
+                <ul className="list-disc pl-5 text-yellow-700 space-y-1 text-sm">
+                  {hariDenganPertandinganTidakTepat3
+                    .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+                    .map(([date, count]) => (
+                      <li key={date}>
+                        {formatDate(date)}: <span className="font-medium">{count} pertandingan</span>
+                      </li>
+                    ))
+                  }
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {pertandingan.length > 0 ? (
         <div className="bg-white rounded-lg shadow-md p-6">
@@ -612,57 +649,39 @@ const JadwalPertandingan = () => {
 
       {pertandingan.length > 0 && (
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-lg font-semibold mb-4">Informasi Jadwal:</h2>
-          <div className="space-y-2 text-sm text-gray-600">
-            <p>• Total pertandingan: <span className="font-medium">{pertandingan.length} pertandingan</span> dalam <span className="font-medium">{availableDates.length} hari</span>.</p>
-            <p>• Jadwal pertandingan diatur dengan memperhatikan waktu istirahat tim.</p>
-            <p>• Setiap hari ada maksimal 3 pertandingan dengan jadwal tetap:</p>
-            <ul className="list-disc pl-8 space-y-1">
-              <li>Pertandingan 1: 13:30 - 14:35 WIB</li>
-              <li>Pertandingan 2: 14:45 - 15:50 WIB</li>
-              <li>Pertandingan 3: 16:00 - 17:05 WIB</li>
-            </ul>
-            <p>• Tidak ada tim yang bermain dua kali dalam sehari.</p>
-            <p>• Tidak ada tim yang bermain di hari berturut-turut.</p>
-            <p>• Rata-rata waktu istirahat antar pertandingan untuk setiap tim: <span className="font-medium">3-5 hari</span>.</p>
+          <h2 className="text-lg font-semibold mb-4 flex items-center">
+            <Calendar className="h-5 w-5 mr-2 text-blue-600" />
+            Informasi Jadwal
+          </h2>
+          <div className="space-y-3 text-sm text-gray-600">
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h3 className="font-medium text-blue-800 mb-2">Ringkasan Jadwal:</h3>
+              <ul className="list-disc pl-5 space-y-2">
+                <li>Total pertandingan: <span className="font-medium">{pertandingan.length} pertandingan</span> dalam <span className="font-medium">{availableDates.length} hari</span>.</li>
+                <li>Pertandingan selesai: <span className="font-medium">{pertandingan.filter(p => p.hasil && p.hasil.selesai).length} pertandingan</span> ({Math.round((pertandingan.filter(p => p.hasil && p.hasil.selesai).length / pertandingan.length) * 100) || 0}%).</li>
+                <li>Rata-rata pertandingan per hari: <span className="font-medium">{(pertandingan.length / availableDates.length).toFixed(1)} pertandingan</span>.</li>
+              </ul>
+            </div>
             
-            {/* Peringatan untuk hari dengan jumlah pertandingan tidak tepat 3 */}
-            {Object.entries(
-              availableDates.reduce((acc, date) => {
-                const matchesOnDate = pertandingan.filter(m => m.tanggal === date).length;
-                acc[date] = matchesOnDate;
-                return acc;
-              }, {} as Record<string, number>)
-            ).filter(([_, count]) => count !== 3).length > 0 && (
-              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                <p className="text-yellow-700 font-medium flex items-center">
-                  <AlertCircle className="h-4 w-4 mr-2" />
-                  Peringatan:
-                </p>
-                <p className="text-yellow-600 mt-1">
-                  Beberapa hari memiliki jumlah pertandingan tidak tepat 3. Ini hanya diperbolehkan untuk jadwal yang tersisa dan tidak ada pilihan lain.
-                </p>
-                <div className="mt-2 max-h-32 overflow-y-auto">
-                  <ul className="list-disc pl-5 text-yellow-600">
-                    {Object.entries(
-                      availableDates.reduce((acc, date) => {
-                        const matchesOnDate = pertandingan.filter(m => m.tanggal === date).length;
-                        acc[date] = matchesOnDate;
-                        return acc;
-                      }, {} as Record<string, number>)
-                    )
-                      .filter(([_, count]) => count !== 3)
-                      .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
-                      .map(([date, count]) => (
-                        <li key={date}>
-                          {formatDate(date)}: {count} pertandingan
-                        </li>
-                      ))
-                    }
-                  </ul>
-                </div>
-              </div>
-            )}
+            <div className="bg-green-50 p-4 rounded-lg">
+              <h3 className="font-medium text-green-800 mb-2">Aturan Jadwal:</h3>
+              <ul className="list-disc pl-5 space-y-2">
+                <li>Setiap hari diusahakan memiliki tepat 3 pertandingan dengan jadwal tetap.</li>
+                <li>Jadwal pertandingan diatur dengan memperhatikan waktu istirahat tim.</li>
+                <li>Tidak ada tim yang bermain dua kali dalam sehari.</li>
+                <li>Tidak ada tim yang bermain di hari berturut-turut.</li>
+                <li>Rata-rata waktu istirahat antar pertandingan untuk setiap tim: <span className="font-medium">3-5 hari</span>.</li>
+              </ul>
+            </div>
+            
+            <div className="bg-purple-50 p-4 rounded-lg">
+              <h3 className="font-medium text-purple-800 mb-2">Jadwal Waktu Pertandingan:</h3>
+              <ul className="list-disc pl-5 space-y-2">
+                <li>Pertandingan 1: <span className="font-medium">13:30 - 14:35 WIB</span></li>
+                <li>Pertandingan 2: <span className="font-medium">14:45 - 15:50 WIB</span></li>
+                <li>Pertandingan 3: <span className="font-medium">16:00 - 17:05 WIB</span></li>
+              </ul>
+            </div>
           </div>
         </div>
       )}
