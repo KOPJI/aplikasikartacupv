@@ -25,15 +25,6 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Select } from "./ui/select";
-import { 
-  UserPlus, 
-  Edit, 
-  Trash2, 
-  Save, 
-  X, 
-  Users,
-  Search
-} from 'lucide-react';
 
 interface Player {
   id: string;
@@ -170,7 +161,6 @@ const DetailManajemenPemain = () => {
       <div className="flex gap-4 mb-6">
         <div className="flex-1">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             <Input
               type="text"
               placeholder="Cari pemain..."
@@ -191,69 +181,70 @@ const DetailManajemenPemain = () => {
           <option value="D">Grup D</option>
         </Select>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
+          <DialogTrigger onClick={() => setIsAddDialogOpen(true)}>
             <Button className="flex items-center gap-2">
-              <UserPlus size={20} />
               Tambah Pemain
             </Button>
           </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Tambah Pemain Baru</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label>Nama Pemain</Label>
-                <Input
-                  value={newPlayer.nama}
-                  onChange={(e) => setNewPlayer({...newPlayer, nama: e.target.value})}
-                />
+          {isAddDialogOpen && (
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Tambah Pemain Baru</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label>Nama Pemain</Label>
+                  <Input
+                    value={newPlayer.nama}
+                    onChange={(e) => setNewPlayer({...newPlayer, nama: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label>Nomor Punggung</Label>
+                  <Input
+                    value={newPlayer.nomorPunggung}
+                    onChange={(e) => setNewPlayer({...newPlayer, nomorPunggung: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label>Posisi</Label>
+                  <Select
+                    value={newPlayer.posisi}
+                    onValueChange={(value) => setNewPlayer({...newPlayer, posisi: value})}
+                  >
+                    <option value="">Pilih Posisi</option>
+                    <option value="Penyerang">Penyerang</option>
+                    <option value="Gelandang">Gelandang</option>
+                    <option value="Bertahan">Bertahan</option>
+                    <option value="Kiper">Kiper</option>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Tim</Label>
+                  <Select
+                    value={newPlayer.timId}
+                    onValueChange={(value) => setNewPlayer({...newPlayer, timId: value})}
+                  >
+                    <option value="">Pilih Tim</option>
+                    {teams
+                      .filter(team => team.grup === selectedGrup)
+                      .map(team => (
+                        <option key={team.id} value={team.id}>{team.nama}</option>
+                      ))
+                    }
+                  </Select>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                    Batal
+                  </Button>
+                  <Button onClick={handleAddPlayer} disabled={loading}>
+                    {loading ? 'Menyimpan...' : 'Simpan'}
+                  </Button>
+                </div>
               </div>
-              <div>
-                <Label>Nomor Punggung</Label>
-                <Input
-                  value={newPlayer.nomorPunggung}
-                  onChange={(e) => setNewPlayer({...newPlayer, nomorPunggung: e.target.value})}
-                />
-              </div>
-              <div>
-                <Label>Posisi</Label>
-                <Select
-                  value={newPlayer.posisi}
-                  onValueChange={(value) => setNewPlayer({...newPlayer, posisi: value})}
-                >
-                  <option value="">Pilih Posisi</option>
-                  <option value="Penyerang">Penyerang</option>
-                  <option value="Gelandang">Gelandang</option>
-                  <option value="Bertahan">Bertahan</option>
-                  <option value="Kiper">Kiper</option>
-                </Select>
-              </div>
-              <div>
-                <Label>Tim</Label>
-                <Select
-                  value={newPlayer.timId}
-                  onValueChange={(value) => setNewPlayer({...newPlayer, timId: value})}
-                >
-                  <option value="">Pilih Tim</option>
-                  {teams
-                    .filter(team => team.grup === selectedGrup)
-                    .map(team => (
-                      <option key={team.id} value={team.id}>{team.nama}</option>
-                    ))
-                  }
-                </Select>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                  Batal
-                </Button>
-                <Button onClick={handleAddPlayer} disabled={loading}>
-                  {loading ? 'Menyimpan...' : 'Simpan'}
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
+            </DialogContent>
+          )}
         </Dialog>
       </div>
 
@@ -288,14 +279,14 @@ const DetailManajemenPemain = () => {
                         setIsEditDialogOpen(true);
                       }}
                     >
-                      <Edit size={16} />
+                      Edit
                     </Button>
                     <Button
                       variant="destructive"
                       size="sm"
                       onClick={() => handleDeletePlayer(player.id)}
                     >
-                      <Trash2 size={16} />
+                      Hapus
                     </Button>
                   </div>
                 </TableCell>
@@ -307,11 +298,11 @@ const DetailManajemenPemain = () => {
 
       {/* Dialog Edit Pemain */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Pemain</DialogTitle>
-          </DialogHeader>
-          {selectedPlayer && (
+        {isEditDialogOpen && selectedPlayer && (
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Pemain</DialogTitle>
+            </DialogHeader>
             <div className="space-y-4">
               <div>
                 <Label>Nama Pemain</Label>
@@ -362,8 +353,8 @@ const DetailManajemenPemain = () => {
                 </Button>
               </div>
             </div>
-          )}
-        </DialogContent>
+          </DialogContent>
+        )}
       </Dialog>
 
       {/* Error Message */}
