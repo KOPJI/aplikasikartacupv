@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { Award, Calendar, ChartLine, Database, House, Trophy, Users } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Navbar = () => {
   return (
@@ -129,6 +130,18 @@ const Navbar = () => {
                   Data
                 </div>
               </NavLink>
+              <NavLink
+                to="/manajemen-pemain"
+                className={({ isActive }) =>
+                  `inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                    isActive
+                      ? "border-blue-500 text-gray-900"
+                      : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                  }`
+                }
+              >
+                Manajemen Pemain
+              </NavLink>
             </div>
           </div>
         </div>
@@ -235,6 +248,17 @@ const Navbar = () => {
           >
             <Database className="h-5 w-5" />
             <span>Data</span>
+          </NavLink>
+          <NavLink
+            to="/manajemen-pemain"
+            className={({ isActive }) =>
+              isActive
+                ? "bg-green-600 flex flex-col items-center px-3 py-2 rounded-md text-xs font-medium"
+                : "flex flex-col items-center px-3 py-2 rounded-md text-xs font-medium hover:bg-green-600 hover:bg-opacity-75"
+            }
+          >
+            <Users className="h-5 w-5" />
+            <span>Manajemen Pemain</span>
           </NavLink>
         </div>
       </div>
