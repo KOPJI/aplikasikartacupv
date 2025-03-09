@@ -6,25 +6,25 @@ import {
   savePlayerToFirestore,
   deletePlayerFromFirestore 
 } from '../services/firebase';
+
+// Import semua komponen UI dari file index
 import { 
+  Button,
+  Input,
+  Label,
+  Select,
   Table, 
   TableBody, 
   TableCell, 
   TableHead, 
   TableHeader, 
-  TableRow 
-} from "./ui/table";
-import {
+  TableRow,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-} from "./ui/dialog";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { Select } from "./ui/select";
+  DialogTrigger
+} from "./ui";
 
 interface Player {
   id: string;
