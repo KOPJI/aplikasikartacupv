@@ -197,13 +197,13 @@ const JadwalPertandingan = () => {
 
   // Hapus jadwal dari Firestore dan aplikasi
   const handleDeleteSchedule = async () => {
-    if (!window.confirm('Apakah Anda yakin ingin menghapus semua jadwal pertandingan? Tindakan ini akan menghapus semua jadwal, hasil pertandingan, statistik pemain (gol, kartu), dan tidak dapat dibatalkan.')) {
+    if (!window.confirm('Apakah Anda yakin ingin menghapus semua jadwal pertandingan? Tindakan ini akan menghapus semua jadwal, hasil pertandingan, statistik pemain (gol, kartu), klasemen, dan tidak dapat dibatalkan.')) {
       return;
     }
     
     try {
       setIsLoading(true);
-      setStatus({ type: 'info', message: 'Menghapus jadwal dan statistik...' });
+      setStatus({ type: 'info', message: 'Menghapus jadwal, statistik, dan klasemen...' });
 
       // Hapus dari Firestore jika diperlukan
       if (window.confirm('Apakah Anda juga ingin menghapus jadwal dari Firebase?')) {
@@ -218,7 +218,7 @@ const JadwalPertandingan = () => {
       
       setStatus({ 
         type: 'success', 
-        message: 'Jadwal pertandingan dan statistik pemain berhasil direset!' 
+        message: 'Jadwal pertandingan, statistik pemain, dan klasemen berhasil direset!' 
       });
 
       // Clear success message after 3 seconds

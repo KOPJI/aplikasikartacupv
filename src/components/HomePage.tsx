@@ -56,6 +56,26 @@ const HomePage = () => {
     return allPlayers;
   };
 
+  // Fungsi untuk memeriksa apakah ada data statistik
+  const hasStatisticsData = () => {
+    // Periksa apakah ada pertandingan dengan hasil
+    const matchesWithResults = pertandingan.filter(match => match.hasil).length > 0;
+    
+    // Periksa apakah ada pemain dengan gol
+    const playersWithGoals = teams.some(team => 
+      team.pemain.some(player => (player.golTotal || 0) > 0)
+    );
+    
+    // Periksa apakah ada pemain dengan kartu
+    const playersWithCards = teams.some(team => 
+      team.pemain.some(player => 
+        (player.kartuKuning || 0) > 0 || (player.kartuMerah || 0) > 0
+      )
+    );
+    
+    return matchesWithResults || playersWithGoals || playersWithCards;
+  };
+
   // Fungsi untuk mendapatkan pertandingan mendatang
   useEffect(() => {
     const today = new Date();
@@ -106,6 +126,30 @@ const HomePage = () => {
           </div>
         </div>
       </div>
+
+      {/* Pesan Informasi ketika tidak ada data statistik */}
+      {!hasStatisticsData() && (
+        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-md">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <AlertCircle className="h-5 w-5 text-blue-500" />
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-blue-800">Belum ada data statistik</h3>
+              <div className="mt-2 text-sm text-blue-700">
+                <p>
+                  Belum ada data statistik pemain (gol, kartu) dan klasemen. Data akan muncul setelah Anda menginput hasil pertandingan.
+                </p>
+                <p className="mt-1">
+                  <Link to="/jadwal" className="font-medium text-blue-600 hover:text-blue-500">
+                    Klik di sini untuk mengelola jadwal dan hasil pertandingan
+                  </Link>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

@@ -1166,9 +1166,9 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
     // Hapus semua pertandingan babak gugur
     setPertandinganBabakGugur([]);
     
-    // Reset statistik pemain (gol, kartu kuning, kartu merah)
+    // Reset statistik pemain (gol, kartu kuning, kartu merah) dan klasemen tim
     const resetTeams = teams.map(team => {
-      // Reset statistik tim
+      // Reset statistik tim (klasemen)
       const resetedTeam = {
         ...team,
         main: 0,
@@ -1181,7 +1181,7 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
         poin: 0
       };
       
-      // Reset statistik pemain
+      // Reset statistik pemain (topskor, kartu, larangan bermain)
       const resetedPlayers = team.pemain.map(player => ({
         ...player,
         golTotal: 0,
@@ -1198,7 +1198,13 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
     // Update teams dengan statistik yang sudah direset
     setTeams(resetTeams);
     
-    console.log("Jadwal, pertandingan babak gugur, dan statistik pemain telah direset");
+    // Panggil updateKlasemen untuk memastikan klasemen benar-benar direset
+    // Ini memastikan bahwa semua perhitungan klasemen dijalankan ulang
+    setTimeout(() => {
+      updateKlasemen();
+    }, 100);
+    
+    console.log("Jadwal, pertandingan babak gugur, statistik pemain, dan klasemen telah direset");
   };
 
   const getTeamsByGroup = (group: string) => {
