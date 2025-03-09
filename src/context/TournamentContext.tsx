@@ -934,7 +934,183 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
     // Update state
     setPertandingan(scheduledMatches);
     
-    return validateSchedule();
+    // Validasi jadwal
+    const validationResult = validateSchedule();
+    
+    // Jika jadwal tidak valid, coba optimasi
+    if (!validationResult.isValid) {
+      console.log("Jadwal tidak valid, mencoba optimasi...");
+      const optimizationResult = optimizeSchedule();
+      
+      // Jika optimasi tidak berhasil, coba regenerasi jadwal dengan pendekatan berbeda
+      if (!optimizationResult.isValid) {
+        console.log("Optimasi tidak berhasil, mencoba pendekatan berbeda...");
+        
+        // Pendekatan manual: Pastikan setiap hari memiliki jumlah pertandingan yang tepat
+        const fixedSchedule = forceFixSchedule();
+        
+        // Update state dengan jadwal yang diperbaiki
+        setPertandingan(fixedSchedule);
+        
+        // Validasi lagi
+        return validateSchedule();
+      }
+    }
+    
+    return validationResult;
+  };
+  
+  // Fungsi untuk memaksa perbaikan jadwal
+  const forceFixSchedule = (): Pertandingan[] => {
+    // Dapatkan semua tanggal yang ada dalam jadwal
+    const availableDates = [...new Set(pertandingan.map(p => p.tanggal))].sort();
+    const firstDayStr = availableDates[0];
+    const lastDayStr = availableDates[availableDates.length - 1];
+    
+    // Hitung jumlah pertandingan per hari
+    const matchesPerDay: { [date: string]: Pertandingan[] } = {};
+    availableDates.forEach(date => {
+      matchesPerDay[date] = pertandingan.filter(match => match.tanggal === date);
+    });
+    
+    // Identifikasi hari-hari dengan jumlah pertandingan tidak tepat
+    const daysWithTooFewMatches = Object.entries(matchesPerDay)
+      .filter(([date, matches]) => {
+        // Hari pertama harus memiliki tepat 2 pertandingan
+        if (date === firstDayStr) {
+          return matches.length < jamPertandinganHariPertama.length;
+        }
+        
+        // Hari lainnya (kecuali hari terakhir) harus memiliki tepat 3 pertandingan
+        if (date !== lastDayStr) {
+          return matches.length < jamPertandingan.length;
+        }
+        
+        return false;
+      })
+      .map(([date, matches]) => ({ date, matches }));
+    
+    const daysWithTooManyMatches = Object.entries(matchesPerDay)
+      .filter(([date, matches]) => {
+        // Hari pertama harus memiliki tepat 2 pertandingan
+        if (date === firstDayStr) {
+          return matches.length > jamPertandinganHariPertama.length;
+        }
+        
+        // Hari lainnya harus memiliki tepat 3 pertandingan
+        return matches.length > jamPertandingan.length;
+      })
+      .map(([date, matches]) => ({ date, matches }));
+    
+    // Buat salinan jadwal untuk dimodifikasi
+    let fixedSchedule = [...pertandingan];
+    
+    // Jika ada hari dengan terlalu banyak pertandingan, pindahkan ke hari dengan terlalu sedikit
+    if (daysWithTooManyMatches.length > 0 && daysWithTooFewMatches.length > 0) {
+      for (const { date: dateWithTooMany, matches } of daysWithTooManyMatches) {
+        // Hitung berapa pertandingan yang perlu dipindahkan
+        const maxMatches = dateWithTooMany === firstDayStr ? 
+          jamPertandinganHariPertama.length : jamPertandingan.length;
+        const excessMatches = matches.length - maxMatches;
+        
+        if (excessMatches <= 0) continue;
+        
+        // Ambil pertandingan yang akan dipindahkan
+        const matchesToMove = matches.slice(-excessMatches);
+        
+        for (const match of matchesToMove) {
+          // Cari hari dengan terlalu sedikit pertandingan
+          for (const { date: dateWithTooFew } of daysWithTooFewMatches) {
+            const currentMatches = fixedSchedule.filter(m => m.tanggal === dateWithTooFew);
+            const maxMatchesForTarget = dateWithTooFew === firstDayStr ? 
+              jamPertandinganHariPertama.length : jamPertandingan.length;
+            
+            // Jika hari ini masih bisa menampung pertandingan lagi
+            if (currentMatches.length < maxMatchesForTarget) {
+              // Pindahkan pertandingan ke hari ini
+              const matchIndex = fixedSchedule.findIndex(m => m.id === match.id);
+              if (matchIndex !== -1) {
+                // Tentukan waktu pertandingan berdasarkan jumlah pertandingan yang sudah ada
+                const timeArray = dateWithTooFew === firstDayStr ? 
+                  jamPertandinganHariPertama : jamPertandingan;
+                const timeSlot = currentMatches.length;
+                
+                fixedSchedule[matchIndex] = {
+                  ...fixedSchedule[matchIndex],
+                  tanggal: dateWithTooFew,
+                  waktu: timeArray[timeSlot]
+                };
+                
+                console.log(`Memindahkan pertandingan dari ${dateWithTooMany} ke ${dateWithTooFew}`);
+                
+                // Jika hari ini sudah penuh, pindah ke hari berikutnya
+                if (currentMatches.length + 1 >= maxMatchesForTarget) {
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    // Jika masih ada hari dengan terlalu sedikit pertandingan, tambahkan hari baru
+    const updatedDaysWithTooFewMatches = Object.entries(
+      fixedSchedule.reduce((acc, match) => {
+        if (!acc[match.tanggal]) acc[match.tanggal] = [];
+        acc[match.tanggal].push(match);
+        return acc;
+      }, {} as { [date: string]: Pertandingan[] })
+    )
+    .filter(([date, matches]) => {
+      // Hari pertama harus memiliki tepat 2 pertandingan
+      if (date === firstDayStr) {
+        return matches.length < jamPertandinganHariPertama.length;
+      }
+      
+      // Hari lainnya (kecuali hari terakhir) harus memiliki tepat 3 pertandingan
+      if (date !== lastDayStr) {
+        return matches.length < jamPertandingan.length;
+      }
+      
+      return false;
+    })
+    .map(([date, matches]) => ({ date, matches }));
+    
+    if (updatedDaysWithTooFewMatches.length > 0) {
+      console.log("Masih ada hari dengan terlalu sedikit pertandingan, menambahkan hari baru...");
+      
+      // Tambahkan hari baru setelah hari terakhir
+      const lastDate = new Date(lastDayStr);
+      const newDate = new Date(lastDate);
+      newDate.setDate(lastDate.getDate() + 1);
+      const newDateStr = newDate.toISOString().split('T')[0];
+      
+      // Pindahkan beberapa pertandingan dari hari terakhir ke hari baru
+      const lastDayMatches = fixedSchedule.filter(match => match.tanggal === lastDayStr);
+      
+      // Jika hari terakhir memiliki lebih dari 3 pertandingan, pindahkan kelebihannya
+      if (lastDayMatches.length > jamPertandingan.length) {
+        const matchesToMove = lastDayMatches.slice(-Math.min(3, lastDayMatches.length - jamPertandingan.length));
+        
+        for (let i = 0; i < matchesToMove.length; i++) {
+          const match = matchesToMove[i];
+          const matchIndex = fixedSchedule.findIndex(m => m.id === match.id);
+          
+          if (matchIndex !== -1) {
+            fixedSchedule[matchIndex] = {
+              ...fixedSchedule[matchIndex],
+              tanggal: newDateStr,
+              waktu: jamPertandingan[i]
+            };
+            
+            console.log(`Memindahkan pertandingan dari ${lastDayStr} ke hari baru ${newDateStr}`);
+          }
+        }
+      }
+    }
+    
+    return fixedSchedule;
   };
 
   // Fungsi untuk menghapus jadwal
@@ -1932,24 +2108,21 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
     // 4. Durasi setiap pertandingan adalah 65 menit (1 jam 5 menit)
     
     // Hitung jumlah pertandingan per hari
-    const matchesPerDay: { [date: string]: number } = {};
-    pertandingan.forEach(match => {
-      if (!matchesPerDay[match.tanggal]) {
-        matchesPerDay[match.tanggal] = 0;
-      }
-      matchesPerDay[match.tanggal]++;
+    const matchesPerDay: { [date: string]: Pertandingan[] } = {};
+    availableDates.forEach(date => {
+      matchesPerDay[date] = pertandingan.filter(match => match.tanggal === date);
     });
     
     // Buat salinan jadwal untuk dioptimalkan
-    const optimizedMatches = [...pertandingan];
+    let optimizedMatches = [...pertandingan];
     let optimizationsMade = 0;
     
     // Identifikasi hari dengan jumlah pertandingan tidak tepat
     const daysWithWrongMatchCount = Object.entries(matchesPerDay)
-      .filter(([date, count]) => {
+      .filter(([date, matches]) => {
         // Hari pertama harus memiliki tepat 2 pertandingan
         if (date === firstDayStr) {
-          return count !== jamPertandinganHariPertama.length;
+          return matches.length !== jamPertandinganHariPertama.length;
         }
         
         // Hari terakhir diperbolehkan memiliki jumlah pertandingan tidak tepat 3
@@ -1958,27 +2131,101 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
         }
         
         // Hari lainnya harus memiliki tepat 3 pertandingan
-        return count !== jamPertandingan.length;
-      });
+        return matches.length !== jamPertandingan.length;
+      })
+      .map(([date, matches]) => ({ date, matches }));
     
     // Jika ada hari dengan jumlah pertandingan tidak tepat, coba perbaiki
     if (daysWithWrongMatchCount.length > 0) {
       console.log(`Ada ${daysWithWrongMatchCount.length} hari dengan jumlah pertandingan tidak tepat`);
       
-      // Implementasi optimasi jadwal bisa ditambahkan di sini
-      // ...
+      // Identifikasi hari dengan terlalu banyak pertandingan
+      const daysWithTooManyMatches = daysWithWrongMatchCount.filter(({ date, matches }) => {
+        const maxMatches = date === firstDayStr ? jamPertandinganHariPertama.length : jamPertandingan.length;
+        return matches.length > maxMatches;
+      });
       
-      // Untuk saat ini, kita hanya mengembalikan status bahwa optimasi diperlukan
-      return {
-        isValid: false,
-        messages: daysWithWrongMatchCount.map(([date, count]) => {
-          // Tentukan jumlah pertandingan yang diharapkan
-          const expectedCount = date === firstDayStr ? jamPertandinganHariPertama.length : jamPertandingan.length;
+      // Identifikasi hari dengan terlalu sedikit pertandingan
+      const daysWithTooFewMatches = daysWithWrongMatchCount.filter(({ date, matches }) => {
+        const maxMatches = date === firstDayStr ? jamPertandinganHariPertama.length : jamPertandingan.length;
+        return matches.length < maxMatches;
+      });
+      
+      // Jika ada hari dengan terlalu banyak pertandingan dan hari dengan terlalu sedikit pertandingan,
+      // pindahkan pertandingan dari hari dengan terlalu banyak ke hari dengan terlalu sedikit
+      if (daysWithTooManyMatches.length > 0 && daysWithTooFewMatches.length > 0) {
+        for (const { date: dateWithTooMany, matches } of daysWithTooManyMatches) {
+          // Hitung berapa pertandingan yang perlu dipindahkan
+          const maxMatches = dateWithTooMany === firstDayStr ? 
+            jamPertandinganHariPertama.length : jamPertandingan.length;
+          const excessMatches = matches.length - maxMatches;
           
-          return `Tanggal ${date} memiliki ${count} pertandingan, seharusnya tepat ${expectedCount} pertandingan`;
-        }),
-        optimized: false
-      };
+          if (excessMatches <= 0) continue;
+          
+          // Ambil pertandingan yang akan dipindahkan
+          const matchesToMove = matches.slice(-excessMatches);
+          
+          for (const match of matchesToMove) {
+            // Cari hari dengan terlalu sedikit pertandingan
+            for (const { date: dateWithTooFew, matches: targetMatches } of daysWithTooFewMatches) {
+              const maxMatchesForTarget = dateWithTooFew === firstDayStr ? 
+                jamPertandinganHariPertama.length : jamPertandingan.length;
+              
+              // Jika hari ini masih bisa menampung pertandingan lagi
+              if (targetMatches.length < maxMatchesForTarget) {
+                // Pindahkan pertandingan ke hari ini
+                const matchIndex = optimizedMatches.findIndex(m => m.id === match.id);
+                if (matchIndex !== -1) {
+                  // Tentukan waktu pertandingan berdasarkan jumlah pertandingan yang sudah ada
+                  const timeArray = dateWithTooFew === firstDayStr ? 
+                    jamPertandinganHariPertama : jamPertandingan;
+                  const timeSlot = targetMatches.length;
+                  
+                  optimizedMatches[matchIndex] = {
+                    ...optimizedMatches[matchIndex],
+                    tanggal: dateWithTooFew,
+                    waktu: timeArray[timeSlot]
+                  };
+                  
+                  // Update jumlah pertandingan
+                  targetMatches.push(match);
+                  optimizationsMade++;
+                  
+                  console.log(`Memindahkan pertandingan dari ${dateWithTooMany} ke ${dateWithTooFew}`);
+                  
+                  // Jika hari ini sudah penuh, pindah ke hari berikutnya
+                  if (targetMatches.length >= maxMatchesForTarget) {
+                    break;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      // Jika masih ada hari dengan jumlah pertandingan tidak tepat, gunakan pendekatan yang lebih agresif
+      if (optimizationsMade > 0) {
+        // Update state dengan jadwal yang dioptimalkan
+        setPertandingan(optimizedMatches);
+        
+        return {
+          isValid: true,
+          messages: [`Berhasil mengoptimalkan jadwal dengan ${optimizationsMade} perubahan`],
+          optimized: true,
+          optimizationCount: optimizationsMade
+        };
+      } else {
+        // Jika tidak ada optimasi yang dilakukan, gunakan pendekatan yang lebih agresif
+        return {
+          isValid: false,
+          messages: daysWithWrongMatchCount.map(({ date, matches }) => {
+            const expectedCount = date === firstDayStr ? jamPertandinganHariPertama.length : jamPertandingan.length;
+            return `Tanggal ${date} memiliki ${matches.length} pertandingan, seharusnya tepat ${expectedCount} pertandingan`;
+          }),
+          optimized: false
+        };
+      }
     }
     
     // Jika tidak ada hari dengan jumlah pertandingan tidak tepat, jadwal sudah optimal
