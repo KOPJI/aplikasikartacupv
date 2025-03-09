@@ -98,7 +98,7 @@ const HasilBabakGugurForm = () => {
   };
   
   // Add goal scorer
-  const addGoalScorer = (timId: string) => {
+  const addGoalScorer = () => {
     setFormData({
       ...formData,
       pencetakGol: [
@@ -169,24 +169,10 @@ const HasilBabakGugurForm = () => {
   
   // Remove card
   const removeCard = (index: number) => {
-    const updatedCards = [...formData.kartu];
-    updatedCards.splice(index, 1);
-    
     setFormData({
       ...formData,
-      kartu: updatedCards
+      kartu: formData.kartu.filter((_, i) => i !== index)
     });
-  };
-  
-  // Get player name by ID
-  const getPlayerName = (playerId: string) => {
-    const playerA = pemainTimA.find(p => p.id === playerId);
-    if (playerA) return playerA.nama;
-    
-    const playerB = pemainTimB.find(p => p.id === playerId);
-    if (playerB) return playerB.nama;
-    
-    return '';
   };
   
   // Submit form
@@ -370,7 +356,7 @@ const HasilBabakGugurForm = () => {
             <div className="flex space-x-2">
               <button
                 type="button"
-                onClick={() => addGoalScorer(timA.id)}
+                onClick={() => addGoalScorer()}
                 className="text-blue-600 hover:text-blue-800 flex items-center text-sm font-medium"
               >
                 <CirclePlus className="h-4 w-4 mr-1" />
@@ -378,7 +364,7 @@ const HasilBabakGugurForm = () => {
               </button>
               <button
                 type="button"
-                onClick={() => addGoalScorer(timB.id)}
+                onClick={() => addGoalScorer()}
                 className="text-blue-600 hover:text-blue-800 flex items-center text-sm font-medium"
               >
                 <CirclePlus className="h-4 w-4 mr-1" />

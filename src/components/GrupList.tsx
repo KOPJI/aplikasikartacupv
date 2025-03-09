@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Eye, Shield, UserPlus, Users } from 'lucide-react';
+import { Shield, UserPlus, Users } from 'lucide-react';
 import { useTournament } from '../context/TournamentContext';
 
 const GrupList = () => {
-  const { teams, getTeamsByGroup } = useTournament();
+  const { getTeamsByGroup } = useTournament();
   const [activeGrup, setActiveGrup] = useState<string>('A');
 
   const teamsInGrup = getTeamsByGroup(activeGrup);

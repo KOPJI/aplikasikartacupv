@@ -8,7 +8,6 @@ import TeamScheduleStats from './TeamScheduleStats';
 const JadwalPertandingan = () => {
   const { 
     pertandingan, 
-    teams, 
     generateJadwal, 
     getPertandinganByTanggal,
     getTeam,
@@ -112,9 +111,6 @@ const JadwalPertandingan = () => {
 
   // Format waktu pertandingan dengan durasi
   const formatWaktuDenganDurasi = (waktu: string) => {
-    let jamAkhir;
-    let menitAkhir;
-    
     switch (waktu) {
       case "13:30":
         return "13:30 - 14:35";

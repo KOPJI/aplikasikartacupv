@@ -7,11 +7,9 @@ import {
   setDoc, 
   addDoc, 
   deleteDoc, 
-  updateDoc,
   query,
   where,
-  writeBatch,
-  limit
+  writeBatch
 } from 'firebase/firestore';
 
 // Firebase konfigurasi

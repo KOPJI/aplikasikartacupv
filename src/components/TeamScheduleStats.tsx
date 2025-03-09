@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowDownUp, ChartBar, Calendar, ChevronDown, ChevronUp, CircleAlert, CircleCheck, Shield } from 'lucide-react';
+import { ChartBar, ChevronDown, ChevronUp, CircleAlert, CircleCheck, Shield } from 'lucide-react';
 import { useTournament } from '../context/TournamentContext';
 
 type SortField = 'name' | 'group' | 'matches' | 'restDays' | 'avgRest';
@@ -21,7 +21,7 @@ interface TeamScheduleStat {
 }
 
 const TeamScheduleStats = () => {
-  const { teams, pertandingan, getTeam, getPertandinganByTim } = useTournament();
+  const { teams, pertandingan, getPertandinganByTim } = useTournament();
   const [teamStats, setTeamStats] = useState<TeamScheduleStat[]>([]);
   const [sortBy, setSortBy] = useState<SortField>('group');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');

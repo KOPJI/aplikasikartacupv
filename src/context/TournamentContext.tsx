@@ -192,30 +192,10 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
   // Helper function: cek apakah tim bermain pada tanggal tertentu
   const isTeamPlayingOnDate = (teamId: string, date: string, excludeMatchId?: string): boolean => {
     return pertandingan.some(match => 
-      match.tanggal === date && 
       (match.timA === teamId || match.timB === teamId) && 
+      match.tanggal === date &&
       (excludeMatchId ? match.id !== excludeMatchId : true)
     );
-  };
-  
-  // Helper function: cek apakah tim bermain pada rentang tanggal tertentu
-  // Jika daysRange = 2, cek hari ini, kemarin, dan besok
-  const isTeamPlayingInDateRange = (teamId: string, date: string, daysRange: number = 1): boolean => {
-    const targetDate = new Date(date);
-    
-    // Cek untuk setiap hari dalam range
-    for (let i = -daysRange; i <= daysRange; i++) {
-      const checkDate = new Date(targetDate);
-      checkDate.setDate(targetDate.getDate() + i);
-      const checkDateStr = checkDate.toISOString().split('T')[0];
-      
-      // Jika tim bermain di salah satu hari dalam range, return true
-      if (isTeamPlayingOnDate(teamId, checkDateStr)) {
-        return true;
-      }
-    }
-    
-    return false;
   };
 
   // Hitung jumlah hari antara dua tanggal
@@ -223,33 +203,6 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
     const d1 = new Date(date1);
     const d2 = new Date(date2);
     return Math.abs(Math.floor((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24)));
-  };
-
-  // Helper function: mendapatkan tanggal pertandingan terakhir tim
-  const getLastMatchDate = (teamId: string): string | null => {
-    const teamMatches = pertandingan.filter(match => 
-      match.timA === teamId || match.timB === teamId
-    ).sort((a, b) => new Date(b.tanggal).getTime() - new Date(a.tanggal).getTime());
-    
-    return teamMatches.length > 0 ? teamMatches[0].tanggal : null;
-  };
-
-  // Helper function: menghitung jumlah pertandingan untuk setiap tim
-  const getMatchCountByTeam = (): { [teamId: string]: number } => {
-    const matchCounts: { [teamId: string]: number } = {};
-    
-    // Inisialisasi untuk semua tim
-    teams.forEach(team => {
-      matchCounts[team.id] = 0;
-    });
-    
-    // Hitung pertandingan
-    pertandingan.forEach(match => {
-      matchCounts[match.timA] = (matchCounts[match.timA] || 0) + 1;
-      matchCounts[match.timB] = (matchCounts[match.timB] || 0) + 1;
-    });
-    
-    return matchCounts;
   };
 
   // Helper function: menghitung jumlah hari istirahat untuk setiap tim
@@ -299,33 +252,6 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
     });
     
     return restDays;
-  };
-
-  // Helper function: mendapatkan tanggal pertandingan setiap tim
-  const getTeamMatchDates = (): { [teamId: string]: string[] } => {
-    const teamDates: { [teamId: string]: string[] } = {};
-    
-    // Inisialisasi untuk semua tim
-    teams.forEach(team => {
-      teamDates[team.id] = [];
-    });
-    
-    // Kumpulkan tanggal pertandingan
-    pertandingan.forEach(match => {
-      if (!teamDates[match.timA].includes(match.tanggal)) {
-        teamDates[match.timA].push(match.tanggal);
-      }
-      if (!teamDates[match.timB].includes(match.tanggal)) {
-        teamDates[match.timB].push(match.tanggal);
-      }
-    });
-    
-    // Sortir tanggal
-    Object.keys(teamDates).forEach(teamId => {
-      teamDates[teamId].sort();
-    });
-    
-    return teamDates;
   };
 
   // Completely redesigned scheduling algorithm
@@ -382,26 +308,6 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
         // Skip if either team has a match on this date
         if (teamASchedule.includes(date) || teamBSchedule.includes(date)) {
           continue;
-        }
-        
-        // Check for consecutive day games - STRICT REQUIREMENT
-        let hasConsecutiveDay = false;
-        
-        // Check previous day
-        const prevDay = new Date(date);
-        prevDay.setDate(prevDay.getDate() - 1);
-        const prevDayStr = prevDay.toISOString().split('T')[0];
-        
-        // Check next day
-        const nextDay = new Date(date);
-        nextDay.setDate(nextDay.getDate() + 1);
-        const nextDayStr = nextDay.toISOString().split('T')[0];
-        
-        // If either team plays the day before or after, this date is not valid
-        if (teamASchedule.includes(prevDayStr) || teamASchedule.includes(nextDayStr) ||
-            teamBSchedule.includes(prevDayStr) || teamBSchedule.includes(nextDayStr)) {
-          hasConsecutiveDay = true;
-          continue; // Skip this date immediately
         }
         
         // Calculate scheduling score for this date
