@@ -92,7 +92,7 @@ interface TournamentContextType {
   
   // Pertandingan
   pertandingan: Pertandingan[];
-  generateJadwal: () => { isValid: boolean; messages: string[] };
+  generateJadwal: (startDate?: Date) => { isValid: boolean; messages: string[] };
   validateSchedule: () => { isValid: boolean; messages: string[] };
   optimizeSchedule: () => { isValid: boolean; messages: string[]; optimized: boolean; optimizationCount?: number };
   getPertandinganByGrup: (grup: string) => Pertandingan[];
@@ -1263,7 +1263,7 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Menghasilkan jadwal pertandingan round-robin dengan algoritma baru
-  const generateJadwal = () => {
+  const generateJadwal = (startDate: Date = new Date('2025-04-01')) => {
     // Siapkan daftar pertandingan yang perlu dijadwalkan
     const matchesToSchedule: { timA: string; timB: string; grup: string }[] = [];
     
@@ -1284,7 +1284,6 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
     });
     
     // Jadwalkan pertandingan dengan algoritma baru
-    const startDate = new Date('2025-04-01'); // Tanggal mulai turnamen
     const scheduledMatches = findOptimalSchedule(matchesToSchedule, startDate);
     
     // Update state

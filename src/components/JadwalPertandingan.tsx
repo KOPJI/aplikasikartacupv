@@ -26,6 +26,23 @@ const JadwalPertandingan = () => {
     message: string;
   }>({ type: null, message: '' });
   const [activeTab, setActiveTab] = useState<'schedule' | 'stats'>('schedule');
+  
+  // State untuk tanggal mulai turnamen
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [startDate, setStartDate] = useState<string>('');
+  
+  // Mendapatkan tanggal hari ini dalam format YYYY-MM-DD
+  const getTodayDate = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+  
+  // Mendapatkan tanggal 30 hari dari sekarang dalam format YYYY-MM-DD
+  const getMaxDate = () => {
+    const maxDate = new Date();
+    maxDate.setDate(maxDate.getDate() + 90); // Maksimal 90 hari dari sekarang
+    return maxDate.toISOString().split('T')[0];
+  };
 
   // Dapatkan semua tanggal yang tersedia dalam jadwal
   useEffect(() => {
@@ -70,11 +87,20 @@ const JadwalPertandingan = () => {
   
   // Fungsi untuk membuat jadwal
   const handleGenerateJadwal = () => {
+    // Jika tanggal mulai belum dipilih, tampilkan pemilih tanggal
+    if (!startDate) {
+      setShowStartDatePicker(true);
+      return;
+    }
+    
     try {
       setIsLoading(true);
       setStatus({ type: 'info', message: 'Sedang membuat jadwal pertandingan...' });
       
-      const result = generateJadwal();
+      // Konversi string tanggal ke objek Date
+      const startDateObj = new Date(startDate);
+      
+      const result = generateJadwal(startDateObj);
       
       if (result.isValid) {
         setStatus({
@@ -82,12 +108,14 @@ const JadwalPertandingan = () => {
           message: 'Jadwal pertandingan berhasil dibuat!'
         });
         setValidationMessages([]);
+        setShowStartDatePicker(false);
       } else {
         setStatus({
           type: 'warning',
           message: 'Jadwal pertandingan berhasil dibuat, tetapi terdapat beberapa masalah:'
         });
         setValidationMessages(result.messages);
+        setShowStartDatePicker(false);
       }
     } catch (error) {
       console.error("Error saat membuat jadwal:", error);
@@ -239,6 +267,7 @@ const JadwalPertandingan = () => {
       
       setSelectedDate('');
       setAvailableDates([]);
+      setStartDate('');
       
       setStatus({ 
         type: 'success', 
@@ -356,6 +385,74 @@ const JadwalPertandingan = () => {
           )}
         </div>
       </div>
+      
+      {/* Dialog Pemilihan Tanggal Mulai Turnamen */}
+      {showStartDatePicker && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fadeIn">
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full animate-scaleIn">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-gray-800">Pilih Tanggal Mulai Turnamen</h3>
+              <button 
+                onClick={() => setShowStartDatePicker(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+              >
+                &times;
+              </button>
+            </div>
+            
+            <div className="mb-6">
+              <p className="text-gray-600 mb-4">
+                Silakan pilih tanggal mulai turnamen. Jadwal pertandingan akan dibuat berdasarkan tanggal ini.
+              </p>
+              
+              <div className="bg-blue-50 p-4 rounded-lg mb-4">
+                <div className="flex items-start">
+                  <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
+                  <div>
+                    <p className="text-blue-700">
+                      Tanggal mulai turnamen adalah tanggal pertandingan pertama akan dijadwalkan. Pastikan Anda memilih tanggal yang tepat.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Tanggal Mulai Turnamen:
+              </label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                min={getTodayDate()}
+                max={getMaxDate()}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
+            </div>
+            
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowStartDatePicker(false)}
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-800 font-medium transition-colors duration-200"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleGenerateJadwal}
+                disabled={!startDate || isLoading}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-lg text-white font-medium transition-colors duration-200 flex items-center"
+              >
+                {isLoading ? (
+                  <Loader className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Calendar className="h-4 w-4 mr-2" />
+                )}
+                Buat Jadwal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {status.type && (
         <div className={`p-4 rounded-md ${
@@ -632,18 +729,31 @@ const JadwalPertandingan = () => {
       ) : (
         <div className="bg-white rounded-lg shadow-md p-8 text-center">
           <p className="text-gray-600 mb-4">Belum ada jadwal pertandingan yang dibuat.</p>
-          <button
-            onClick={handleGenerateJadwal}
-            disabled={isLoading}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-2 px-4 rounded-md inline-flex items-center shadow-sm"
-          >
-            {isLoading ? (
-              <Loader className="h-5 w-5 mr-1 animate-spin" />
-            ) : (
-              <Calendar className="h-5 w-5 mr-1" />
-            )}
-            Buat Jadwal
-          </button>
+          <div className="flex flex-col items-center">
+            <div className="bg-blue-50 p-4 rounded-lg mb-6 max-w-md text-left">
+              <div className="flex">
+                <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
+                <div>
+                  <h3 className="font-medium text-blue-800 mb-1">Petunjuk:</h3>
+                  <p className="text-blue-700 text-sm">
+                    Klik tombol "Buat Jadwal" untuk memulai. Anda akan diminta untuk memilih tanggal mulai turnamen terlebih dahulu.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={handleGenerateJadwal}
+              disabled={isLoading}
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-2 px-4 rounded-md inline-flex items-center shadow-sm"
+            >
+              {isLoading ? (
+                <Loader className="h-5 w-5 mr-1 animate-spin" />
+              ) : (
+                <Calendar className="h-5 w-5 mr-1" />
+              )}
+              Buat Jadwal
+            </button>
+          </div>
         </div>
       )}
 
@@ -660,6 +770,8 @@ const JadwalPertandingan = () => {
                 <li>Total pertandingan: <span className="font-medium">{pertandingan.length} pertandingan</span> dalam <span className="font-medium">{availableDates.length} hari</span>.</li>
                 <li>Pertandingan selesai: <span className="font-medium">{pertandingan.filter(p => p.hasil && p.hasil.selesai).length} pertandingan</span> ({Math.round((pertandingan.filter(p => p.hasil && p.hasil.selesai).length / pertandingan.length) * 100) || 0}%).</li>
                 <li>Rata-rata pertandingan per hari: <span className="font-medium">{(pertandingan.length / availableDates.length).toFixed(1)} pertandingan</span>.</li>
+                <li>Tanggal mulai turnamen: <span className="font-medium">{formatDate(availableDates[0])}</span></li>
+                <li>Tanggal akhir turnamen: <span className="font-medium">{formatDate(availableDates[availableDates.length - 1])}</span></li>
               </ul>
             </div>
             
