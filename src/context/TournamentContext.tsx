@@ -262,9 +262,9 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
       teamSchedules[team.id] = [];
     });
     
-    // Generate 45 days to work with (more than needed, but provides flexibility)
+    // Generate 60 days to work with (more than needed, but provides flexibility)
     const datePool: string[] = [];
-    const maxDays = 45;
+    const maxDays = 60; // Meningkatkan jumlah hari untuk fleksibilitas lebih
     
     for (let i = 0; i < maxDays; i++) {
       const date = new Date(startDate);
@@ -297,9 +297,24 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
       let bestDateScore = -Infinity;
       
       for (const date of datePool) {
-        // Skip if either team has a match on this date
+        // PERSYARATAN KETAT 1: Skip jika salah satu tim sudah bermain pada tanggal ini
         if (teamASchedule.includes(date) || teamBSchedule.includes(date)) {
           continue;
+        }
+        
+        // PERSYARATAN KETAT 2: Skip jika salah satu tim bermain di hari sebelumnya atau berikutnya
+        const prevDate = new Date(date);
+        prevDate.setDate(prevDate.getDate() - 1);
+        const prevDateStr = prevDate.toISOString().split('T')[0];
+        
+        const nextDate = new Date(date);
+        nextDate.setDate(nextDate.getDate() + 1);
+        const nextDateStr = nextDate.toISOString().split('T')[0];
+        
+        // Periksa apakah tim bermain di hari sebelumnya atau berikutnya
+        if (teamASchedule.includes(prevDateStr) || teamASchedule.includes(nextDateStr) ||
+            teamBSchedule.includes(prevDateStr) || teamBSchedule.includes(nextDateStr)) {
+          continue; // Skip tanggal ini jika ada tim yang bermain di hari berturut-turut
         }
         
         // Calculate scheduling score for this date
@@ -310,7 +325,8 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
         if (teamASchedule.length > 0) {
           const lastMatchA = teamASchedule[teamASchedule.length - 1];
           const daysSinceLastA = daysBetween(lastMatchA, date);
-          dateScore += Math.min(daysSinceLastA, 7); // Cap at 7 for scoring purposes
+          // PERSYARATAN KETAT 3: Meningkatkan nilai istirahat minimal
+          dateScore += Math.min(daysSinceLastA, 10); // Cap at 10 for scoring purposes
         } else {
           dateScore += 5; // Bonus for first match
         }
@@ -318,7 +334,8 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
         if (teamBSchedule.length > 0) {
           const lastMatchB = teamBSchedule[teamBSchedule.length - 1];
           const daysSinceLastB = daysBetween(lastMatchB, date);
-          dateScore += Math.min(daysSinceLastB, 7);
+          // PERSYARATAN KETAT 3: Meningkatkan nilai istirahat minimal
+          dateScore += Math.min(daysSinceLastB, 10);
         } else {
           dateScore += 5; // Bonus for first match
         }
@@ -335,8 +352,8 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
         const dateIndex = datePool.indexOf(date);
         dateScore += (maxDays - dateIndex) * 0.1; // Small weight
         
-        // Factor 4: Prefer minimum 2 days rest for both teams
-        const minRestDays = 2;
+        // PERSYARATAN KETAT 4: Memastikan istirahat minimal 3 hari
+        const minRestDays = 3; // Meningkatkan dari 2 menjadi 3
         let hasMinimumRest = true;
         
         if (teamASchedule.length > 0) {
@@ -368,28 +385,29 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
         allDatesTeamA.sort();
         allDatesTeamB.sort();
         
+        // PERSYARATAN KETAT 5: Meningkatkan penalti untuk distribusi istirahat yang tidak merata
         // Calculate rest distribution for Team A
         let balanceScoreA = 0;
         for (let i = 1; i < allDatesTeamA.length; i++) {
           const daysBetweenDates = daysBetween(allDatesTeamA[i-1], allDatesTeamA[i]);
-          // Ideal rest period is around 3-5 days
-          const idealRest = 4;
+          // Ideal rest period is around 4-6 days (meningkatkan dari 3-5)
+          const idealRest = 5; // Meningkatkan dari 4 menjadi 5
           const restDiff = Math.abs(daysBetweenDates - idealRest);
-          balanceScoreA -= restDiff; // Penalize deviation from ideal rest
+          balanceScoreA -= restDiff * 2; // Meningkatkan penalti
         }
         
         // Calculate rest distribution for Team B
         let balanceScoreB = 0;
         for (let i = 1; i < allDatesTeamB.length; i++) {
           const daysBetweenDates = daysBetween(allDatesTeamB[i-1], allDatesTeamB[i]);
-          // Ideal rest period is around 3-5 days
-          const idealRest = 4;
+          // Ideal rest period is around 4-6 days
+          const idealRest = 5;
           const restDiff = Math.abs(daysBetweenDates - idealRest);
-          balanceScoreB -= restDiff; // Penalize deviation from ideal rest
+          balanceScoreB -= restDiff * 2; // Meningkatkan penalti
         }
         
-        // Add balance scores (with lower weight)
-        dateScore += (balanceScoreA + balanceScoreB) * 0.2;
+        // Add balance scores (with higher weight)
+        dateScore += (balanceScoreA + balanceScoreB) * 0.5; // Meningkatkan bobot dari 0.2 menjadi 0.5
         
         // Update best date if this date has a better score
         if (dateScore > bestDateScore) {
@@ -398,74 +416,53 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
         }
       }
       
-      // If no valid date was found, try a fallback approach with relaxed constraints
+      // PERSYARATAN KETAT 6: Tidak menggunakan fallback approach dengan relaxed constraints
+      // Jika tidak ada tanggal yang memenuhi persyaratan ketat, coba tanggal yang lebih jauh
       if (!bestDate) {
-        // Relaxed approach: Allow consecutive days but with penalty
+        // Tambahkan 10 hari lagi ke datePool
+        const lastDate = new Date(datePool[datePool.length - 1]);
+        for (let i = 1; i <= 10; i++) {
+          const newDate = new Date(lastDate);
+          newDate.setDate(lastDate.getDate() + i);
+          const newDateStr = newDate.toISOString().split('T')[0];
+          datePool.push(newDateStr);
+        }
+        
+        // Coba lagi dengan datePool yang diperluas
         for (const date of datePool) {
-          // Skip if either team already has a match on this date (still a hard constraint)
+          // Skip jika salah satu tim sudah bermain pada tanggal ini
           if (teamASchedule.includes(date) || teamBSchedule.includes(date)) {
             continue;
           }
           
-          // Calculate slot availability
+          // Skip jika salah satu tim bermain di hari sebelumnya atau berikutnya
+          const prevDate = new Date(date);
+          prevDate.setDate(prevDate.getDate() - 1);
+          const prevDateStr = prevDate.toISOString().split('T')[0];
+          
+          const nextDate = new Date(date);
+          nextDate.setDate(nextDate.getDate() + 1);
+          const nextDateStr = nextDate.toISOString().split('T')[0];
+          
+          // Periksa apakah tim bermain di hari sebelumnya atau berikutnya
+          if (teamASchedule.includes(prevDateStr) || teamASchedule.includes(nextDateStr) ||
+              teamBSchedule.includes(prevDateStr) || teamBSchedule.includes(nextDateStr)) {
+            continue;
+          }
+          
+          // Periksa slot waktu
           const matchesOnThisDate = scheduledMatches.filter(m => m.tanggal === date).length;
-          if (matchesOnThisDate >= jamPertandingan.length) {
-            continue; // No slots available, skip this date
-          }
-          
-          // Calculate a relaxed score
-          let dateScore = 0;
-          
-          // Check previous and next day (penalty but not disqualification)
-          const prevDay = new Date(date);
-          prevDay.setDate(prevDay.getDate() - 1);
-          const prevDayStr = prevDay.toISOString().split('T')[0];
-          
-          const nextDay = new Date(date);
-          nextDay.setDate(nextDay.getDate() + 1);
-          const nextDayStr = nextDay.toISOString().split('T')[0];
-          
-          // Heavy penalty for consecutive days, but allow it
-          if (teamASchedule.includes(prevDayStr) || teamASchedule.includes(nextDayStr)) {
-            dateScore -= 50;
-          }
-          
-          if (teamBSchedule.includes(prevDayStr) || teamBSchedule.includes(nextDayStr)) {
-            dateScore -= 50;
-          }
-          
-          // Factor: Prefer earlier dates
-          const dateIndex = datePool.indexOf(date);
-          dateScore += (maxDays - dateIndex) * 0.1;
-          
-          // Check slot availability
-          dateScore += (jamPertandingan.length - matchesOnThisDate);
-          
-          // Update best date if this date has a better score
-          if (dateScore > bestDateScore) {
-            bestDateScore = dateScore;
-            bestDate = date;
-          }
-        }
-      }
-      
-      // If still no date found, just use the earliest date that has an available time slot
-      if (!bestDate) {
-        for (const date of datePool) {
-          const matchesOnThisDate = scheduledMatches.filter(m => m.tanggal === date).length;
-          if (matchesOnThisDate < jamPertandingan.length &&
-              !teamASchedule.includes(date) && 
-              !teamBSchedule.includes(date)) {
+          if (matchesOnThisDate < jamPertandingan.length) {
             bestDate = date;
             break;
           }
         }
       }
       
-      // If somehow still no date found (extremely unlikely), use first date as emergency fallback
+      // Jika masih tidak ada tanggal yang cocok, gunakan tanggal terakhir di datePool
       if (!bestDate) {
-        bestDate = datePool[0];
-        console.warn(`Emergency fallback scheduling for match: ${match.timA} vs ${match.timB}`);
+        bestDate = datePool[datePool.length - 1];
+        console.warn(`Tidak dapat menemukan tanggal yang cocok untuk pertandingan: ${getTeam(match.timA)?.nama} vs ${getTeam(match.timB)?.nama}. Menggunakan tanggal terakhir.`);
       }
       
       // Determine which time slot to use
@@ -573,7 +570,7 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
     
     // Tambahkan beberapa tanggal tambahan untuk fleksibilitas
     const lastDate = new Date(availableDates[availableDates.length - 1]);
-    for (let i = 1; i <= 7; i++) {
+    for (let i = 1; i <= 15; i++) { // Meningkatkan dari 7 menjadi 15 hari
       const newDate = new Date(lastDate);
       newDate.setDate(lastDate.getDate() + i);
       availableDates.push(newDate.toISOString().split('T')[0]);
@@ -651,11 +648,30 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
       let bestAlternativeDate: string | null = null;
       let bestDateScore = -Infinity;
       
+      // Buat jadwal tim saat ini (tidak termasuk pertandingan yang sedang dioptimalkan)
+      const currentTeamSchedules: { [teamId: string]: string[] } = {};
+      teams.forEach(team => {
+        currentTeamSchedules[team.id] = [];
+      });
+      
+      // Isi jadwal tim dengan pertandingan yang ada (kecuali pertandingan yang sedang dioptimalkan)
+      optimizedMatches.forEach(m => {
+        if (m.id !== match.id) {
+          if (m.timA) currentTeamSchedules[m.timA].push(m.tanggal);
+          if (m.timB) currentTeamSchedules[m.timB].push(m.tanggal);
+        }
+      });
+      
+      // Sortir jadwal tim
+      Object.keys(currentTeamSchedules).forEach(teamId => {
+        currentTeamSchedules[teamId].sort();
+      });
+      
       for (const date of availableDates) {
         // Lewati tanggal yang sama dengan tanggal pertandingan saat ini
         if (date === match.tanggal) continue;
         
-        // Periksa apakah ada pertandingan lain pada tanggal ini yang melibatkan tim yang sama
+        // PERSYARATAN KETAT 1: Periksa apakah ada pertandingan lain pada tanggal ini yang melibatkan tim yang sama
         const conflictsOnThisDate = optimizedMatches.some(
           m => m.id !== match.id && 
           m.tanggal === date && 
@@ -664,41 +680,63 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
         
         if (conflictsOnThisDate) continue;
         
-        // Periksa hari sebelumnya
+        // PERSYARATAN KETAT 2: Periksa hari sebelumnya dan berikutnya
         const prevDate = new Date(date);
         prevDate.setDate(prevDate.getDate() - 1);
         const prevDateStr = prevDate.toISOString().split('T')[0];
         
-        // Periksa hari berikutnya
         const nextDate = new Date(date);
         nextDate.setDate(nextDate.getDate() + 1);
         const nextDateStr = nextDate.toISOString().split('T')[0];
         
-        // Periksa apakah ada pertandingan di hari sebelumnya atau berikutnya yang melibatkan tim yang sama
-        const conflictsOnAdjacentDays = optimizedMatches.some(
-          m => m.id !== match.id && 
-          (m.tanggal === prevDateStr || m.tanggal === nextDateStr) && 
-          (teamsInvolved.includes(m.timA) || teamsInvolved.includes(m.timB))
+        // PERSYARATAN KETAT 3: Periksa apakah ada pertandingan di hari sebelumnya atau berikutnya yang melibatkan tim yang sama
+        const conflictsOnAdjacentDays = teamsInvolved.some(teamId => 
+          currentTeamSchedules[teamId].includes(prevDateStr) || 
+          currentTeamSchedules[teamId].includes(nextDateStr)
         );
         
         if (conflictsOnAdjacentDays) continue;
         
-        // Hitung jumlah pertandingan pada tanggal ini
-        const matchesOnThisDate = optimizedMatches.filter(m => m.tanggal === date).length;
+        // PERSYARATAN KETAT 4: Hitung jumlah pertandingan pada tanggal ini
+        const matchesOnThisDate = optimizedMatches.filter(m => m.tanggal === date && m.id !== match.id).length;
         
-        // Periksa apakah masih ada slot waktu yang tersedia
+        // PERSYARATAN KETAT 5: Periksa apakah masih ada slot waktu yang tersedia
         if (matchesOnThisDate >= jamPertandingan.length) continue;
         
-        // Hitung skor untuk tanggal ini (lebih rendah lebih baik)
+        // Hitung skor untuk tanggal ini (lebih tinggi lebih baik)
         let dateScore = 0;
         
-        // Faktor 1: Preferensi untuk tanggal yang lebih awal
+        // PERSYARATAN KETAT 6: Preferensi untuk tanggal yang lebih awal
         const currentDateIndex = availableDates.indexOf(match.tanggal);
         const alternativeDateIndex = availableDates.indexOf(date);
         dateScore -= Math.abs(alternativeDateIndex - currentDateIndex) * 2; // Penalti untuk pindah terlalu jauh
         
-        // Faktor 2: Preferensi untuk tanggal dengan lebih sedikit pertandingan
+        // PERSYARATAN KETAT 7: Preferensi untuk tanggal dengan lebih sedikit pertandingan
         dateScore -= matchesOnThisDate * 3;
+        
+        // PERSYARATAN KETAT 8: Periksa distribusi istirahat
+        for (const teamId of teamsInvolved) {
+          const teamDates = [...currentTeamSchedules[teamId], date].sort();
+          
+          // Hitung distribusi istirahat
+          let restDistribution = 0;
+          for (let i = 1; i < teamDates.length; i++) {
+            const daysBetweenMatches = daysBetween(teamDates[i-1], teamDates[i]);
+            
+            // Ideal rest period is around 4-6 days
+            const idealRest = 5;
+            const restDiff = Math.abs(daysBetweenMatches - idealRest);
+            
+            // Penalti lebih besar untuk istirahat yang terlalu pendek
+            if (daysBetweenMatches < 3) {
+              restDistribution -= 50; // Penalti besar untuk istirahat kurang dari 3 hari
+            } else {
+              restDistribution -= restDiff * 2;
+            }
+          }
+          
+          dateScore += restDistribution * 0.5;
+        }
         
         // Update tanggal terbaik jika skor lebih tinggi
         if (dateScore > bestDateScore) {
@@ -710,7 +748,7 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
       // Jika menemukan tanggal alternatif, pindahkan pertandingan
       if (bestAlternativeDate) {
         // Hitung slot waktu yang tersedia
-        const matchesOnNewDate = optimizedMatches.filter(m => m.tanggal === bestAlternativeDate).length;
+        const matchesOnNewDate = optimizedMatches.filter(m => m.tanggal === bestAlternativeDate && m.id !== match.id).length;
         const newTimeSlot = matchesOnNewDate < jamPertandingan.length ? 
           matchesOnNewDate : 0;
         

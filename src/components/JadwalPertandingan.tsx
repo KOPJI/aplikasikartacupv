@@ -299,7 +299,7 @@ const JadwalPertandingan = () => {
                 {isLoading ? (
                   <Loader className="h-5 w-5 mr-1 animate-spin" />
                 ) : (
-                  <RefreshCw className="h-5 w-5 mr-1" />
+                  <RefreshCcw className="h-5 w-5 mr-1" />
                 )}
                 Perbaiki Jadwal
               </button>
