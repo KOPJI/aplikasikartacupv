@@ -1537,6 +1537,19 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
     // Hitung statistik dari pertandingan
     const pertandinganSelesai = pertandingan.filter(p => p.hasil && p.hasil.selesai);
     
+    // Simpan hasil head-to-head untuk tie-breaker
+    const headToHead: Record<string, Record<string, { menang: number, seri: number, kalah: number }>> = {};
+    
+    // Inisialisasi head-to-head record untuk semua tim
+    resetTeams.forEach(team => {
+      headToHead[team.id] = {};
+      resetTeams.forEach(opponent => {
+        if (team.id !== opponent.id) {
+          headToHead[team.id][opponent.id] = { menang: 0, seri: 0, kalah: 0 };
+        }
+      });
+    });
+    
     const updatedTeams = resetTeams.map(team => {
       let main = 0;
       let menang = 0;
@@ -1553,29 +1566,54 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
           golMasuk += p.hasil.skorTimA;
           golKemasukan += p.hasil.skorTimB;
           
+          // Update head-to-head record
+          const opponentId = p.timB;
+          
           if (p.hasil.skorTimA > p.hasil.skorTimB) {
             menang++;
+            if (headToHead[team.id] && headToHead[team.id][opponentId]) {
+              headToHead[team.id][opponentId].menang += 1;
+            }
           } else if (p.hasil.skorTimA === p.hasil.skorTimB) {
             seri++;
+            if (headToHead[team.id] && headToHead[team.id][opponentId]) {
+              headToHead[team.id][opponentId].seri += 1;
+            }
           } else {
             kalah++;
+            if (headToHead[team.id] && headToHead[team.id][opponentId]) {
+              headToHead[team.id][opponentId].kalah += 1;
+            }
           }
         } else if (p.timB === team.id) {
           main++;
           golMasuk += p.hasil.skorTimB;
           golKemasukan += p.hasil.skorTimA;
           
+          // Update head-to-head record
+          const opponentId = p.timA;
+          
           if (p.hasil.skorTimB > p.hasil.skorTimA) {
             menang++;
+            if (headToHead[team.id] && headToHead[team.id][opponentId]) {
+              headToHead[team.id][opponentId].menang += 1;
+            }
           } else if (p.hasil.skorTimB === p.hasil.skorTimA) {
             seri++;
+            if (headToHead[team.id] && headToHead[team.id][opponentId]) {
+              headToHead[team.id][opponentId].seri += 1;
+            }
           } else {
             kalah++;
+            if (headToHead[team.id] && headToHead[team.id][opponentId]) {
+              headToHead[team.id][opponentId].kalah += 1;
+            }
           }
         }
       });
       
       // Hitung poin dan selisih gol
+      // Sistem Poin: 3 poin untuk menang, 1 untuk seri, 0 untuk kalah
       const poin = menang * 3 + seri;
       const selisihGol = golMasuk - golKemasukan;
       
@@ -1592,23 +1630,69 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
       };
     });
     
+    // Simpan head-to-head record untuk digunakan dalam tie-breaker
+    localStorage.setItem('headToHead', JSON.stringify(headToHead));
+    
     setTeams(updatedTeams);
   };
 
   // Mendapatkan klasemen grup
   const getKlasemenGrup = (grup: string) => {
-    return teams
-      .filter(team => team.grup === grup)
-      .sort((a, b) => {
-        // Sortir berdasarkan: 1. Poin, 2. Selisih Gol, 3. Gol Masuk
-        if ((b.poin || 0) !== (a.poin || 0)) {
-          return (b.poin || 0) - (a.poin || 0);
+    // Dapatkan head-to-head record
+    let headToHead: Record<string, Record<string, { menang: number, seri: number, kalah: number }>> = {};
+    try {
+      const savedHeadToHead = localStorage.getItem('headToHead');
+      if (savedHeadToHead) {
+        headToHead = JSON.parse(savedHeadToHead);
+      }
+    } catch (error) {
+      console.error("Error parsing head-to-head data:", error);
+    }
+    
+    // Filter tim berdasarkan grup
+    const teamsInGroup = teams.filter(team => team.grup === grup);
+    
+    // Sortir tim berdasarkan kriteria
+    return teamsInGroup.sort((a, b) => {
+      // 1. Poin
+      const pointsA = a.poin || 0;
+      const pointsB = b.poin || 0;
+      if (pointsA !== pointsB) {
+        return pointsB - pointsA;
+      }
+      
+      // 2. Selisih Gol (SG)
+      const goalDiffA = a.selisihGol || 0;
+      const goalDiffB = b.selisihGol || 0;
+      if (goalDiffA !== goalDiffB) {
+        return goalDiffB - goalDiffA;
+      }
+      
+      // 3. Gol Masuk (GM)
+      const goalsForA = a.golMasuk || 0;
+      const goalsForB = b.golMasuk || 0;
+      if (goalsForA !== goalsForB) {
+        return goalsForB - goalsForA;
+      }
+      
+      // 4. Head-to-Head
+      // Jika kedua tim memiliki poin, selisih gol, dan gol masuk yang sama,
+      // periksa hasil pertandingan langsung antara kedua tim
+      if (headToHead[a.id] && headToHead[a.id][b.id]) {
+        const h2h = headToHead[a.id][b.id];
+        // Hitung poin head-to-head
+        const h2hPointsA = h2h.menang * 3 + h2h.seri;
+        
+        if (h2h.menang > h2h.kalah) {
+          return -1; // Tim A menang dalam head-to-head
+        } else if (h2h.menang < h2h.kalah) {
+          return 1; // Tim B menang dalam head-to-head
         }
-        if ((b.selisihGol || 0) !== (a.selisihGol || 0)) {
-          return (b.selisihGol || 0) - (a.selisihGol || 0);
-        }
-        return (b.golMasuk || 0) - (a.golMasuk || 0);
-      });
+      }
+      
+      // Jika masih sama, urutkan berdasarkan nama tim (untuk konsistensi)
+      return a.nama.localeCompare(b.nama);
+    });
   };
 
   // Mendapatkan daftar pencetak gol terbanyak

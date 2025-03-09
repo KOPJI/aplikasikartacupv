@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Shield, Trophy, ChevronRight } from 'lucide-react';
+import { Shield, Trophy, ChevronRight, AlertCircle } from 'lucide-react';
 import { useTournament } from '../context/TournamentContext';
 import { Link } from 'react-router-dom';
 
@@ -7,6 +7,7 @@ const Klasemen = () => {
   const { getKlasemenGrup } = useTournament();
   const [activeGrup, setActiveGrup] = useState<string>('A');
   const klasemenGrup = getKlasemenGrup(activeGrup);
+  const [showInfo, setShowInfo] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -27,6 +28,54 @@ const Klasemen = () => {
             Grup {grup}
           </button>
         ))}
+      </div>
+      
+      {/* Informasi Sistem Poin dan Tie-Breaker */}
+      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200 mb-4">
+        <div className="flex justify-between items-start">
+          <div className="flex items-start">
+            <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 mr-2 flex-shrink-0" />
+            <div>
+              <h3 className="font-medium text-blue-800 mb-1">Sistem Poin dan Tie-Breaker:</h3>
+              <p className="text-blue-700 text-sm">
+                Sistem Poin: 3 poin untuk menang, 1 untuk seri, 0 untuk kalah.
+              </p>
+              <p className="text-blue-700 text-sm">
+                Urutan Tie-Breaker: Selisih Gol (SG) → Gol Masuk (GM) → Head-to-Head.
+              </p>
+            </div>
+          </div>
+          <button 
+            onClick={() => setShowInfo(!showInfo)}
+            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+          >
+            {showInfo ? 'Sembunyikan Detail' : 'Lihat Detail'}
+          </button>
+        </div>
+        
+        {showInfo && (
+          <div className="mt-3 pt-3 border-t border-blue-200">
+            <h4 className="font-medium text-blue-800 mb-2 text-sm">Keterangan Kolom:</h4>
+            <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-blue-700">
+              <li><span className="font-medium">JM</span>: Jumlah Main</li>
+              <li><span className="font-medium">M</span>: Menang</li>
+              <li><span className="font-medium">S</span>: Seri</li>
+              <li><span className="font-medium">K</span>: Kalah</li>
+              <li><span className="font-medium">GM</span>: Gol Masuk</li>
+              <li><span className="font-medium">GK</span>: Gol Kebobolan</li>
+              <li><span className="font-medium">SG</span>: Selisih Gol (GM - GK)</li>
+              <li><span className="font-medium">P</span>: Poin (M×3 + S×1)</li>
+            </ul>
+            
+            <h4 className="font-medium text-blue-800 mt-3 mb-2 text-sm">Aturan Tie-Breaker:</h4>
+            <ol className="list-decimal pl-5 text-sm text-blue-700 space-y-1">
+              <li>Poin (P): Tim dengan poin lebih tinggi berada di posisi lebih tinggi</li>
+              <li>Selisih Gol (SG): Jika poin sama, tim dengan selisih gol lebih tinggi berada di posisi lebih tinggi</li>
+              <li>Gol Masuk (GM): Jika poin dan selisih gol sama, tim dengan gol masuk lebih banyak berada di posisi lebih tinggi</li>
+              <li>Head-to-Head: Jika semua kriteria di atas sama, hasil pertandingan langsung antar tim menentukan posisi</li>
+            </ol>
+          </div>
+        )}
       </div>
 
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
