@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Shield, Trophy } from 'lucide-react';
+import { Shield, Trophy, ChevronRight } from 'lucide-react';
 import { useTournament } from '../context/TournamentContext';
+import { Link } from 'react-router-dom';
 
 const Klasemen = () => {
-  const { getKlasemenGrup, getPencetakGolTerbanyak } = useTournament();
+  const { getKlasemenGrup } = useTournament();
   const [activeGrup, setActiveGrup] = useState<string>('A');
   const klasemenGrup = getKlasemenGrup(activeGrup);
-  const pencetakGol = getPencetakGolTerbanyak(10);
 
   return (
     <div className="space-y-6">
@@ -139,66 +139,24 @@ const Klasemen = () => {
         </div>
       </div>
 
-      {/* Pencetak Gol Terbanyak */}
+      {/* Link ke Statistik Pemain */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden mt-6">
         <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 p-4 text-white">
-          <h2 className="text-xl font-bold">Top Skor</h2>
+          <h2 className="text-xl font-bold">Statistik Pemain</h2>
         </div>
         
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Pos
-                </th>
-                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Pemain
-                </th>
-                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Tim
-                </th>
-                <th scope="col" className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Gol
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {pencetakGol.map((pemain, index) => {
-                // Find team of player
-                const tim = useTournament().getTeam(pemain.timId);
-                
-                return (
-                  <tr key={pemain.id} className={index < 3 ? "bg-yellow-50" : ""}>
-                    <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {index + 1}
-                    </td>
-                    <td className="px-3 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="text-sm font-medium text-gray-900">
-                          {pemain.nama} 
-                          <span className="text-gray-500 ml-1">({pemain.nomorPunggung})</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {tim?.nama || ''}
-                    </td>
-                    <td className="px-3 py-4 whitespace-nowrap text-sm text-center font-bold text-gray-900">
-                      {pemain.golTotal || 0}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <div className="p-6 text-center">
+          <p className="text-gray-600 mb-4">
+            Untuk melihat data top skor, kartu, dan larangan bermain, silakan kunjungi halaman Statistik Pemain.
+          </p>
+          <Link 
+            to="/statistik" 
+            className="inline-flex items-center px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-md transition-colors"
+          >
+            Lihat Statistik Pemain
+            <ChevronRight className="ml-2 h-4 w-4" />
+          </Link>
         </div>
-        
-        {pencetakGol.length < 1 && (
-          <div className="text-center py-8 text-gray-500">
-            Belum ada data pencetak gol
-          </div>
-        )}
       </div>
     </div>
   );
