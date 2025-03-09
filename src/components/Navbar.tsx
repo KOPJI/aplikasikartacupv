@@ -49,19 +49,6 @@ const Navbar = () => {
                 Beranda
               </NavLink>
               <NavLink
-                to="/jadwal"
-                className={({ isActive }) =>
-                  `inline-flex items-center px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                    isActive
-                      ? "bg-green-900 text-white shadow-md transform scale-105"
-                      : "text-green-100 hover:bg-green-600 hover:text-white"
-                  }`
-                }
-              >
-                <Calendar className="h-4 w-4 mr-1" />
-                Jadwal
-              </NavLink>
-              <NavLink
                 to="/klasemen"
                 className={({ isActive }) =>
                   `inline-flex items-center px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
@@ -178,17 +165,6 @@ const Navbar = () => {
           >
             <Award className="h-5 w-5" />
             <span className="text-xs mt-1">Beranda</span>
-          </NavLink>
-          <NavLink
-            to="/jadwal"
-            className={({ isActive }) =>
-              isActive
-                ? "bg-green-900 flex flex-col items-center justify-center text-white"
-                : "flex flex-col items-center justify-center text-green-100 hover:bg-green-700"
-            }
-          >
-            <Calendar className="h-5 w-5" />
-            <span className="text-xs mt-1">Jadwal</span>
           </NavLink>
           <NavLink
             to="/klasemen"
