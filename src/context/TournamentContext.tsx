@@ -905,6 +905,160 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
       }
     });
     
+    // Tambahkan validasi distribusi istirahat
+    const restDistributionResult = validateRestDistribution(pertandingan);
+    if (!restDistributionResult.isValid) {
+      violations.push(...restDistributionResult.messages);
+    }
+    
+    // Tambahkan validasi jadwal berturut-turut
+    const consecutiveMatchesResult = validateConsecutiveMatches(pertandingan);
+    if (!consecutiveMatchesResult.isValid) {
+      violations.push(...consecutiveMatchesResult.messages);
+    }
+    
+    // Tambahkan validasi pertandingan ganda dalam sehari
+    const sameDayMatchesResult = validateSameDayMatches(pertandingan);
+    if (!sameDayMatchesResult.isValid) {
+      violations.push(...sameDayMatchesResult.messages);
+    }
+    
+    return {
+      isValid: violations.length === 0,
+      messages: violations
+    };
+  };
+
+  // Fungsi untuk memvalidasi distribusi istirahat tim
+  const validateRestDistribution = (schedule: Pertandingan[]): { isValid: boolean; messages: string[] } => {
+    const violations: string[] = [];
+    const teamRestDays: { [teamId: string]: number } = {};
+    const teamLastMatch: { [teamId: string]: string } = {};
+    
+    // Inisialisasi data tim
+    teams.forEach(team => {
+      teamRestDays[team.id] = 0;
+      teamLastMatch[team.id] = '';
+    });
+    
+    // Urutkan pertandingan berdasarkan tanggal
+    const sortedMatches = [...schedule].sort((a, b) => a.tanggal.localeCompare(b.tanggal));
+    
+    // Hitung hari istirahat untuk setiap tim
+    sortedMatches.forEach(match => {
+      const teamsInMatch = [match.timA, match.timB];
+      
+      teamsInMatch.forEach(teamId => {
+        if (teamLastMatch[teamId]) {
+          const lastMatchDate = new Date(teamLastMatch[teamId]);
+          const currentMatchDate = new Date(match.tanggal);
+          const restDays = Math.floor((currentMatchDate.getTime() - lastMatchDate.getTime()) / (1000 * 60 * 60 * 24));
+          
+          teamRestDays[teamId] += restDays;
+        }
+        teamLastMatch[teamId] = match.tanggal;
+      });
+    });
+    
+    // Hitung rata-rata dan standar deviasi hari istirahat
+    const restDaysValues = Object.values(teamRestDays);
+    const avgRestDays = restDaysValues.reduce((a, b) => a + b, 0) / restDaysValues.length;
+    const stdDevRestDays = Math.sqrt(
+      restDaysValues.reduce((a, b) => a + Math.pow(b - avgRestDays, 2), 0) / restDaysValues.length
+    );
+    
+    // Validasi distribusi istirahat
+    Object.entries(teamRestDays).forEach(([teamId, restDays]) => {
+      const team = getTeam(teamId);
+      if (Math.abs(restDays - avgRestDays) > stdDevRestDays * 1.5) {
+        violations.push(
+          `Tim ${team?.nama || teamId} memiliki distribusi istirahat yang tidak proporsional ` +
+          `(${restDays} hari vs rata-rata ${avgRestDays.toFixed(1)} hari)`
+        );
+      }
+    });
+    
+    return {
+      isValid: violations.length === 0,
+      messages: violations
+    };
+  };
+
+  // Fungsi untuk memvalidasi jadwal berturut-turut secara ketat
+  const validateConsecutiveMatches = (schedule: Pertandingan[]): { isValid: boolean; messages: string[] } => {
+    const violations: string[] = [];
+    const teamSchedules: { [teamId: string]: string[] } = {};
+    
+    // Inisialisasi jadwal tim
+    teams.forEach(team => {
+      teamSchedules[team.id] = [];
+    });
+    
+    // Kumpulkan semua tanggal pertandingan untuk setiap tim
+    schedule.forEach(match => {
+      teamSchedules[match.timA].push(match.tanggal);
+      teamSchedules[match.timB].push(match.tanggal);
+    });
+    
+    // Periksa setiap tim untuk jadwal berturut-turut
+    Object.entries(teamSchedules).forEach(([teamId, dates]) => {
+      const sortedDates = [...new Set(dates)].sort();
+      
+      for (let i = 0; i < sortedDates.length - 1; i++) {
+        const currentDate = new Date(sortedDates[i]);
+        const nextDate = new Date(sortedDates[i + 1]);
+        const daysDiff = Math.floor((nextDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (daysDiff <= 1) {
+          const team = getTeam(teamId);
+          violations.push(
+            `Tim ${team?.nama || teamId} memiliki pertandingan berturut-turut pada tanggal ` +
+            `${sortedDates[i]} dan ${sortedDates[i + 1]}`
+          );
+        }
+      }
+    });
+    
+    return {
+      isValid: violations.length === 0,
+      messages: violations
+    };
+  };
+
+  // Fungsi untuk memvalidasi pertandingan ganda dalam sehari
+  const validateSameDayMatches = (schedule: Pertandingan[]): { isValid: boolean; messages: string[] } => {
+    const violations: string[] = [];
+    const matchesByDate: { [date: string]: Pertandingan[] } = {};
+    
+    // Kelompokkan pertandingan berdasarkan tanggal
+    schedule.forEach(match => {
+      if (!matchesByDate[match.tanggal]) {
+        matchesByDate[match.tanggal] = [];
+      }
+      matchesByDate[match.tanggal].push(match);
+    });
+    
+    // Periksa setiap tanggal
+    Object.entries(matchesByDate).forEach(([date, matches]) => {
+      const teamsPlayingToday: { [teamId: string]: number } = {};
+      
+      // Hitung berapa kali setiap tim bermain pada tanggal ini
+      matches.forEach(match => {
+        teamsPlayingToday[match.timA] = (teamsPlayingToday[match.timA] || 0) + 1;
+        teamsPlayingToday[match.timB] = (teamsPlayingToday[match.timB] || 0) + 1;
+      });
+      
+      // Periksa tim yang bermain lebih dari satu kali
+      Object.entries(teamsPlayingToday).forEach(([teamId, count]) => {
+        if (count > 1) {
+          const team = getTeam(teamId);
+          violations.push(
+            `Tim ${team?.nama || teamId} dijadwalkan bermain ${count} kali pada tanggal ${date}`
+          );
+        }
+      });
+    });
+    
     return {
       isValid: violations.length === 0,
       messages: violations
