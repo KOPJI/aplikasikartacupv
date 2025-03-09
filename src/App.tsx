@@ -58,14 +58,6 @@ function App() {
           <Navbar />
           <div 
             className="relative pt-6 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto"
-            style={{
-              backgroundImage: "url('https://i.imgur.com/JWi4oPF.png')",
-              backgroundPosition: "center bottom",
-              backgroundRepeat: "no-repeat",
-              backgroundSize: "contain",
-              backgroundAttachment: "fixed",
-              opacity: 0.9
-            }}
           >
             {/* Decorative elements */}
             <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-green-100 to-transparent z-0"></div>
@@ -97,7 +89,7 @@ function App() {
           {/* Footer */}
           <footer className="bg-gradient-to-r from-green-800 to-green-600 text-white py-6">
             <div className="container mx-auto px-4 text-center">
-              <p className="text-sm">© 2023 KARTA CUP. Semua hak dilindungi.</p>
+              <p className="text-sm">© 2025 KARTA CUP. Semua hak dilindungi.</p>
               <p className="text-xs text-green-200 mt-1">Aplikasi Manajemen Turnamen Sepak Bola</p>
             </div>
           </footer>
