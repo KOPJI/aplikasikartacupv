@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, CirclePlus, Save, Shield, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Save, Shield, Trash2 } from 'lucide-react';
 import { useTournament, PencetakGol, KartuPemain } from '../context/TournamentContext';
 
 const HasilBabakGugurForm = () => {
@@ -358,18 +358,18 @@ const HasilBabakGugurForm = () => {
               <button
                 type="button"
                 onClick={() => addGoalScorer()}
-                className="text-blue-600 hover:text-blue-800 flex items-center text-sm font-medium"
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center"
               >
-                <CirclePlus className="h-4 w-4 mr-1" />
-                Tim A
+                <Plus className="h-4 w-4 mr-1" />
+                Tambah Pencetak Gol
               </button>
               <button
                 type="button"
                 onClick={() => addGoalScorer()}
-                className="text-blue-600 hover:text-blue-800 flex items-center text-sm font-medium"
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center ml-4"
               >
-                <CirclePlus className="h-4 w-4 mr-1" />
-                Tim B
+                <Plus className="h-4 w-4 mr-1" />
+                Tambah Assist
               </button>
             </div>
           </div>
@@ -435,18 +435,18 @@ const HasilBabakGugurForm = () => {
               <button
                 type="button"
                 onClick={() => addCard('kuning')}
-                className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200 px-2 py-1 rounded-md flex items-center text-sm font-medium"
+                className="text-yellow-600 hover:text-yellow-800 text-sm font-medium flex items-center"
               >
-                <CirclePlus className="h-4 w-4 mr-1" />
-                Kartu Kuning
+                <Plus className="h-4 w-4 mr-1" />
+                Tambah Kartu Kuning
               </button>
               <button
                 type="button"
                 onClick={() => addCard('merah')}
-                className="bg-red-100 text-red-800 hover:bg-red-200 px-2 py-1 rounded-md flex items-center text-sm font-medium"
+                className="text-red-600 hover:text-red-800 text-sm font-medium flex items-center ml-4"
               >
-                <CirclePlus className="h-4 w-4 mr-1" />
-                Kartu Merah
+                <Plus className="h-4 w-4 mr-1" />
+                Tambah Kartu Merah
               </button>
             </div>
           </div>
