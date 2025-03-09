@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Award, Squircle, AlertCircle, Shield, Trophy, ChevronDown, ChevronUp, Users, Trash2 } from 'lucide-react';
+import { Award, Shield, Trophy, ChevronDown, ChevronUp, Users, Trash2 } from 'lucide-react';
 import { useTournament } from '../context/TournamentContext';
 import { Link } from 'react-router-dom';
 
@@ -167,24 +167,24 @@ const StatistikPemain = () => {
           </button>
           <button
             onClick={() => setActiveTab('kartu')}
-            className={`px-6 py-3 rounded-full font-medium transition-all duration-300 flex items-center ${
+            className={`flex items-center px-4 py-2 rounded-md ${
               activeTab === 'kartu'
-                ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md transform scale-105'
-                : 'bg-transparent text-gray-700 hover:bg-gray-100'
+                ? 'bg-orange-100 text-orange-800'
+                : 'hover:bg-gray-100'
             }`}
           >
-            <Squircle className={`h-5 w-5 mr-2 ${activeTab === 'kartu' ? 'text-orange-200' : 'text-orange-500'}`} />
+            <Shield className={`h-5 w-5 mr-2 ${activeTab === 'kartu' ? 'text-orange-200' : 'text-orange-500'}`} />
             Kartu
           </button>
           <button
             onClick={() => setActiveTab('larangan')}
-            className={`px-6 py-3 rounded-full font-medium transition-all duration-300 flex items-center ${
+            className={`flex items-center px-4 py-2 rounded-md ${
               activeTab === 'larangan'
-                ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-md transform scale-105'
-                : 'bg-transparent text-gray-700 hover:bg-gray-100'
+                ? 'bg-red-100 text-red-800'
+                : 'hover:bg-gray-100'
             }`}
           >
-            <AlertCircle className={`h-5 w-5 mr-2 ${activeTab === 'larangan' ? 'text-red-200' : 'text-red-500'}`} />
+            <Shield className={`h-5 w-5 mr-2 ${activeTab === 'larangan' ? 'text-red-200' : 'text-red-500'}`} />
             Larangan Bermain
           </button>
         </div>
@@ -318,7 +318,7 @@ const StatistikPemain = () => {
             <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-6 text-white">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold flex items-center">
-                  <Squircle className="mr-3 h-7 w-7 text-orange-200" />
+                  <Shield className="mr-3 h-7 w-7 text-orange-200" />
                   Pemain dengan Kartu
                 </h2>
                 <div className="flex items-center space-x-4">
@@ -342,10 +342,10 @@ const StatistikPemain = () => {
                   {/* Statistik Kartu */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl p-6 shadow-md">
-                      <h3 className="text-lg font-bold text-yellow-800 mb-2 flex items-center">
-                        <Squircle className="h-5 w-5 mr-2 text-yellow-600" />
-                        Kartu Kuning
-                      </h3>
+                      <div className="flex items-center mb-4">
+                        <Shield className="h-5 w-5 mr-2 text-yellow-600" />
+                        <h3 className="text-lg font-bold text-yellow-800">Kartu Kuning</h3>
+                      </div>
                       <div className="text-4xl font-bold text-yellow-700 mb-2">
                         {filteredPlayersWithCards.reduce((total, player) => total + (player.kartuKuning || 0), 0)}
                       </div>
@@ -353,10 +353,10 @@ const StatistikPemain = () => {
                     </div>
                     
                     <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-6 shadow-md">
-                      <h3 className="text-lg font-bold text-red-800 mb-2 flex items-center">
-                        <Squircle className="h-5 w-5 mr-2 text-red-600" />
-                        Kartu Merah
-                      </h3>
+                      <div className="flex items-center mb-4">
+                        <Shield className="h-5 w-5 mr-2 text-red-600" />
+                        <h3 className="text-lg font-bold text-red-800">Kartu Merah</h3>
+                      </div>
                       <div className="text-4xl font-bold text-red-700 mb-2">
                         {filteredPlayersWithCards.reduce((total, player) => total + (player.kartuMerah || 0), 0)}
                       </div>
@@ -402,7 +402,7 @@ const StatistikPemain = () => {
                 </div>
               ) : (
                 <div className="text-center py-12 text-gray-500">
-                  <Squircle className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+                  <Shield className="h-16 w-16 mx-auto text-gray-300 mb-4" />
                   <p className="text-xl font-medium">Belum ada pemain yang mendapatkan kartu</p>
                   <p className="text-sm mt-2">Data akan muncul setelah pertandingan dimulai</p>
                 </div>
@@ -417,7 +417,7 @@ const StatistikPemain = () => {
             <div className="bg-gradient-to-r from-red-500 to-red-600 p-6 text-white">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold flex items-center">
-                  <AlertCircle className="mr-3 h-7 w-7 text-red-200" />
+                  <Shield className="mr-3 h-7 w-7 text-red-200" />
                   Pemain Dilarang Bermain
                 </h2>
                 <div className="flex items-center space-x-4">
@@ -461,7 +461,7 @@ const StatistikPemain = () => {
                             </div>
                             <div className="flex items-center justify-between">
                               <div className="flex items-center">
-                                <AlertCircle className="h-5 w-5 mr-2 text-red-500" />
+                                <Shield className="h-5 w-5 mr-2 text-red-500" />
                                 <span className="text-sm font-medium text-red-800">
                                   {pemain.banReason}
                                 </span>
@@ -487,7 +487,7 @@ const StatistikPemain = () => {
                   
                   <div className="mt-8 bg-red-50 p-6 rounded-xl shadow-md">
                     <h3 className="text-lg font-bold text-red-800 mb-3 flex items-center">
-                      <AlertCircle className="h-5 w-5 mr-2" />
+                      <Shield className="h-5 w-5 mr-2" />
                       Aturan Larangan Bermain
                     </h3>
                     <ul className="text-sm text-red-700 space-y-3 list-disc pl-5">
@@ -500,13 +500,13 @@ const StatistikPemain = () => {
                 </div>
               ) : (
                 <div className="text-center py-12 text-gray-500">
-                  <AlertCircle className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+                  <Shield className="h-16 w-16 mx-auto text-gray-300 mb-4" />
                   <p className="text-xl font-medium">Tidak ada pemain yang dilarang bermain</p>
                   <p className="text-sm mt-2">Semua pemain dapat bermain di pertandingan selanjutnya</p>
                   
                   <div className="mt-8 bg-red-50 p-6 rounded-xl shadow-md max-w-2xl mx-auto">
                     <h3 className="text-lg font-bold text-red-800 mb-3 flex items-center">
-                      <AlertCircle className="h-5 w-5 mr-2" />
+                      <Shield className="h-5 w-5 mr-2" />
                       Aturan Larangan Bermain
                     </h3>
                     <ul className="text-sm text-red-700 space-y-3 list-disc pl-5">
@@ -541,7 +541,7 @@ const StatistikPemain = () => {
               <div className="bg-red-50 p-4 rounded-lg mb-4">
                 <div className="flex">
                   <div className="flex-shrink-0">
-                    <AlertCircle className="h-5 w-5 text-red-600" />
+                    <Shield className="h-5 w-5 text-red-600" />
                   </div>
                   <div className="ml-3">
                     <h3 className="text-sm font-medium text-red-800">

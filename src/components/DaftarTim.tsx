@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Pencil, Plus, Shield, Trash2, UserPlus, Users } from 'lucide-react';
+import { Pencil, Plus, Shield, Trash2, Users } from 'lucide-react';
 import { useTournament, Tim } from '../context/TournamentContext';
 
 const DaftarTim = () => {
@@ -113,10 +113,10 @@ const DaftarTim = () => {
                       <div className="flex justify-end space-x-2">
                         <Link 
                           to={`/pemain/tambah/${tim.id}`}
-                          className="text-indigo-600 hover:text-indigo-900 p-1"
-                          title="Tambah Pemain"
+                          className="text-blue-600 text-sm flex items-center hover:text-blue-800"
                         >
-                          <UserPlus className="h-5 w-5" />
+                          <Plus className="w-4 h-4 mr-1" />
+                          Tambah Pemain
                         </Link>
                         <Link 
                           to={`/tim/edit/${tim.id}`}

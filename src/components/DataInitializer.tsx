@@ -8,7 +8,7 @@ import {
   getPlayersFromFirestore,
   db
 } from '../services/firebase';
-import { ArrowUpFromLine, ArrowDownToLine, Database, Loader, Trash2, AlertCircle } from 'lucide-react';
+import { ArrowUpFromLine, ArrowDownToLine, Database, Loader, Trash2, Calendar } from 'lucide-react';
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 
 const DataInitializer = () => {
@@ -266,7 +266,7 @@ const DataInitializer = () => {
 
         {firebaseConnected === false && (
           <div className="mb-6 p-4 rounded-md bg-red-50 text-red-700 border border-red-200 flex items-start">
-            <AlertCircle className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
+            <Calendar className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
             <div>
               <p className="font-semibold">Tidak dapat terhubung ke Firebase</p>
               <p className="text-sm mt-1">
@@ -376,6 +376,19 @@ const DataInitializer = () => {
               )}
               Hapus Data Pemain
             </button>
+          </div>
+        </div>
+
+        <div className="bg-blue-50 p-4 rounded-lg mb-6">
+          <div className="flex items-start">
+            <Calendar className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
+            <div>
+              <h3 className="font-medium text-blue-800 mb-1">Tentang Fitur Ini</h3>
+              <p className="text-sm text-blue-700">
+                Fitur ini memungkinkan Anda untuk menyimpan dan memulihkan data turnamen dari Firebase. 
+                Gunakan fitur ini untuk backup data atau memindahkan data ke perangkat lain.
+              </p>
+            </div>
           </div>
         </div>
       </div>

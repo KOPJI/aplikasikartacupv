@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, UserRound } from 'lucide-react';
+import { ArrowLeft, Save, Users } from 'lucide-react';
 import { useTournament } from '../context/TournamentContext';
 
 const PemainForm = () => {
@@ -98,14 +98,15 @@ const PemainForm = () => {
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <h1 className="text-2xl font-bold text-gray-800">
-          {isEdit ? 'Edit Pemain' : 'Tambah Pemain Baru'}
+        <h1 className="text-2xl font-bold flex items-center">
+          <Users className="mr-2 h-5 w-5" />
+          {id ? 'Edit Pemain' : 'Tambah Pemain Baru'}
         </h1>
       </div>
       
       {currentTeam && (
         <div className="mb-4 flex items-center bg-blue-50 text-blue-700 p-3 rounded-md">
-          <UserRound className="mr-2 h-5 w-5" />
+          <Users className="mr-2 h-5 w-5" />
           Tim: <span className="font-semibold ml-1">{currentTeam.nama}</span>
         </div>
       )}

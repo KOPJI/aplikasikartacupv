@@ -1,4 +1,4 @@
-import { Shield, Trophy, Calendar, Users, AlertCircle } from 'lucide-react';
+import { Shield, Trophy, Calendar, Users } from 'lucide-react';
 import { useTournament } from '../context/TournamentContext';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -97,7 +97,7 @@ const HomePage = () => {
         <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-md">
           <div className="flex items-start">
             <div className="flex-shrink-0">
-              <AlertCircle className="h-5 w-5 text-blue-500" />
+              <Calendar className="h-5 w-5 text-blue-500" />
             </div>
             <div className="ml-3">
               <h3 className="text-sm font-medium text-blue-800">Belum ada data statistik</h3>

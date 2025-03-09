@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Shield, Trophy, ChevronRight, AlertCircle } from 'lucide-react';
+import { Shield, Trophy, ChevronRight, Calendar } from 'lucide-react';
 import { useTournament } from '../context/TournamentContext';
 import { Link } from 'react-router-dom';
 
@@ -34,14 +34,11 @@ const Klasemen = () => {
       <div className="bg-blue-50 rounded-lg p-4 border border-blue-200 mb-4">
         <div className="flex justify-between items-start">
           <div className="flex items-start">
-            <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 mr-2 flex-shrink-0" />
+            <Calendar className="h-5 w-5 text-blue-600 mt-0.5 mr-2 flex-shrink-0" />
             <div>
               <h3 className="font-medium text-blue-800 mb-1">Sistem Poin dan Tie-Breaker:</h3>
               <p className="text-blue-700 text-sm">
-                Sistem Poin: 3 poin untuk menang, 1 untuk seri, 0 untuk kalah.
-              </p>
-              <p className="text-blue-700 text-sm">
-                Urutan Tie-Breaker: Selisih Gol (SG) → Gol Masuk (GM) → Head-to-Head.
+                Menang: 3 poin, Seri: 1 poin, Kalah: 0 poin. Jika poin sama, urutan ditentukan berdasarkan: 1) Selisih gol, 2) Gol tercetak, 3) Head-to-head
               </p>
             </div>
           </div>
@@ -76,6 +73,17 @@ const Klasemen = () => {
             </ol>
           </div>
         )}
+      </div>
+
+      <div className="bg-blue-50 p-4 rounded-lg mb-6">
+        <div className="flex items-start">
+          <Calendar className="h-5 w-5 text-blue-600 mt-0.5 mr-2 flex-shrink-0" />
+          <div>
+            <p className="text-blue-700">
+              Klasemen akan diperbarui secara otomatis setelah hasil pertandingan diinput. Tim dengan poin tertinggi akan berada di posisi teratas.
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow-md overflow-hidden">

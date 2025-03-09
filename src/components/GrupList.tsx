@@ -3,7 +3,7 @@ import { useState } from 'react';
 // @ts-ignore
 import { Link } from 'react-router-dom';
 // @ts-ignore
-import { Shield, UserPlus, Users } from 'lucide-react';
+import { Shield, Plus, Users } from 'lucide-react';
 import { useTournament } from '../context/TournamentContext';
 import { Tim } from '../context/TournamentContext';
 
@@ -65,11 +65,11 @@ const GrupList = () => {
                 
                 <div className="flex justify-between mt-3">
                   <Link 
-                    to={`/pemain/tambah/${tim.id}`} 
-                    className="text-blue-600 text-sm flex items-center hover:text-blue-800"
+                    to={`/tim/new?grup=${activeGrup}`} 
+                    className="flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium"
                   >
-                    <UserPlus className="w-4 h-4 mr-1" />
-                    Tambah Pemain
+                    <Plus className="w-4 h-4 mr-1" />
+                    Tambah Tim
                   </Link>
                 </div>
               </div>
