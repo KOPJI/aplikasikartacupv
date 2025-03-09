@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ChartBar, Calendar, ChevronLeft, ChevronRight, Loader, Shield, Trash2 } from 'lucide-react';
+import { ChartBar, Calendar, ChevronLeft, ChevronRight, Loader, Shield, Trash2, RefreshCcw } from 'lucide-react';
 import { useTournament } from '../context/TournamentContext';
 import { initializeMatchesToFirestore, deleteCollectionData } from '../services/firebase';
 import TeamScheduleStats from './TeamScheduleStats';
@@ -12,6 +12,7 @@ const JadwalPertandingan = () => {
     getPertandinganByTanggal,
     getTeam,
     validateSchedule,
+    optimizeSchedule,
     clearSchedule
   } = useTournament();
   
@@ -49,34 +50,74 @@ const JadwalPertandingan = () => {
       setIsLoading(true);
       setStatus({ type: 'info', message: 'Sedang membuat jadwal pertandingan...' });
       
-      // Buat jadwal
-      const validationResult = generateJadwal();
+      const result = generateJadwal();
       
-      if (validationResult.isValid) {
-        setStatus({ 
-          type: 'success', 
-          message: 'Jadwal pertandingan berhasil dibuat!' 
+      if (result.isValid) {
+        setStatus({
+          type: 'success',
+          message: 'Jadwal pertandingan berhasil dibuat!'
         });
         setValidationMessages([]);
       } else {
-        setStatus({ 
-          type: 'warning', 
-          message: 'Jadwal dibuat dengan beberapa peringatan' 
+        setStatus({
+          type: 'warning',
+          message: 'Jadwal pertandingan berhasil dibuat, tetapi terdapat beberapa masalah:'
         });
-        setValidationMessages(validationResult.messages);
+        setValidationMessages(result.messages);
       }
-      
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        if (status.type === 'success') {
-          setStatus({ type: null, message: '' });
-        }
-      }, 3000);
     } catch (error) {
       console.error("Error saat membuat jadwal:", error);
-      setStatus({ 
-        type: 'error', 
-        message: `Gagal membuat jadwal: ${error instanceof Error ? error.message : String(error)}` 
+      setStatus({
+        type: 'error',
+        message: `Gagal membuat jadwal: ${error instanceof Error ? error.message : String(error)}`
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fungsi untuk memperbaiki jadwal
+  const handleOptimizeSchedule = () => {
+    try {
+      setIsLoading(true);
+      setStatus({ type: 'info', message: 'Sedang memperbaiki jadwal pertandingan...' });
+      
+      const result = optimizeSchedule();
+      
+      if (result.optimized) {
+        if (result.isValid) {
+          setStatus({
+            type: 'success',
+            message: `Jadwal berhasil diperbaiki! ${result.optimizationCount} pertandingan telah dipindahkan.`
+          });
+          setValidationMessages([]);
+        } else {
+          setStatus({
+            type: 'warning',
+            message: `Jadwal diperbaiki sebagian (${result.optimizationCount} pertandingan dipindahkan), tetapi masih terdapat beberapa masalah:`
+          });
+          setValidationMessages(result.messages);
+        }
+      } else {
+        if (result.isValid) {
+          setStatus({
+            type: 'success',
+            message: 'Jadwal sudah optimal dan tidak perlu diperbaiki.'
+          });
+          setValidationMessages([]);
+        } else {
+          setStatus({
+            type: 'warning',
+            message: 'Tidak dapat memperbaiki jadwal secara otomatis. Silakan perbaiki secara manual:'
+          });
+          setValidationMessages(result.messages);
+        }
+      }
+    } catch (error) {
+      console.error("Error saat memperbaiki jadwal:", error);
+      setStatus({
+        type: 'error',
+        message: `Gagal memperbaiki jadwal: ${error instanceof Error ? error.message : String(error)}`
       });
     } finally {
       setIsLoading(false);
@@ -237,6 +278,32 @@ const JadwalPertandingan = () => {
           
           {pertandingan.length > 0 && (
             <>
+              <button
+                onClick={handleValidateSchedule}
+                disabled={isLoading}
+                className="bg-yellow-600 hover:bg-yellow-700 disabled:bg-yellow-400 text-white font-medium py-2 px-4 rounded-md inline-flex items-center shadow-sm"
+              >
+                {isLoading ? (
+                  <Loader className="h-5 w-5 mr-1 animate-spin" />
+                ) : (
+                  <Calendar className="h-5 w-5 mr-1" />
+                )}
+                Validasi Jadwal
+              </button>
+              
+              <button
+                onClick={handleOptimizeSchedule}
+                disabled={isLoading}
+                className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white font-medium py-2 px-4 rounded-md inline-flex items-center shadow-sm"
+              >
+                {isLoading ? (
+                  <Loader className="h-5 w-5 mr-1 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-5 w-5 mr-1" />
+                )}
+                Perbaiki Jadwal
+              </button>
+              
               <button
                 onClick={handleSaveToFirestore}
                 disabled={isLoading}
