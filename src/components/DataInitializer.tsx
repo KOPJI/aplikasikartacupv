@@ -3,12 +3,14 @@ import { useTournament } from '../context/TournamentContext';
 import { 
   initializeTeamsToFirestore, 
   initializePlayersToFirestore,
-  deleteCollectionData
+  deleteCollectionData,
+  getTeamsFromFirestore,
+  getPlayersFromFirestore
 } from '../services/firebase';
-import { ArrowUpFromLine, Database, Loader, Trash2 } from 'lucide-react';
+import { ArrowUpFromLine, ArrowDownToLine, Database, Loader, Trash2 } from 'lucide-react';
 
 const DataInitializer = () => {
-  const { teams } = useTournament();
+  const { teams, loadTeamsFromFirestore } = useTournament();
   
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState<{
@@ -83,6 +85,36 @@ const DataInitializer = () => {
       setStatus({ 
         type: 'error', 
         message: `Gagal menginisialisasi data: ${error instanceof Error ? error.message : String(error)}` 
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fungsi untuk mengambil data dari Firestore
+  const handleLoadFromFirestore = async () => {
+    try {
+      setIsLoading(true);
+      setStatus({ type: 'info', message: 'Mengambil data dari Firestore...' });
+
+      // Ambil data tim
+      const teamsData = await getTeamsFromFirestore();
+      
+      // Ambil data pemain
+      const playersData = await getPlayersFromFirestore();
+
+      // Update state dalam context
+      await loadTeamsFromFirestore(teamsData, playersData);
+      
+      setStatus({ 
+        type: 'success', 
+        message: 'Data tim dan pemain berhasil dimuat dari Firestore!' 
+      });
+    } catch (error) {
+      console.error("Error saat memuat data:", error);
+      setStatus({ 
+        type: 'error', 
+        message: `Gagal memuat data: ${error instanceof Error ? error.message : String(error)}` 
       });
     } finally {
       setIsLoading(false);
@@ -210,6 +242,26 @@ const DataInitializer = () => {
           )}
           Inisialisasi Semua Data (Tim & Pemain)
         </button>
+
+        <div className="border-t border-gray-200 pt-6 mb-8">
+          <h3 className="text-lg font-semibold mb-4 text-gray-800">Ambil Data dari Firestore</h3>
+          <button
+            onClick={handleLoadFromFirestore}
+            disabled={isLoading}
+            className="w-full flex items-center justify-center bg-amber-600 hover:bg-amber-700 disabled:bg-amber-400 text-white py-3 px-6 rounded-md shadow-sm transition-colors"
+          >
+            {isLoading ? (
+              <Loader className="mr-2 h-5 w-5 animate-spin" />
+            ) : (
+              <ArrowDownToLine className="mr-2 h-5 w-5" />
+            )}
+            Ambil Data dari Firestore
+          </button>
+          <p className="text-sm text-gray-500 mt-2">
+            Tombol ini akan mengambil data tim dan pemain dari Firestore dan memperbarui data lokal.
+            Data lokal yang ada akan digantikan dengan data dari Firestore.
+          </p>
+        </div>
 
         <div className="border-t border-gray-200 pt-6">
           <h3 className="text-lg font-semibold mb-4 text-gray-800">Hapus Data</h3>
