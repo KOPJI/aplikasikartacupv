@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChartBar, ChevronDown, ChevronUp, CircleAlert, CircleCheck, Shield } from 'lucide-react';
+import { Trophy, ChevronDown, ChevronUp, CircleAlert, CircleCheck, Shield } from 'lucide-react';
 import { useTournament } from '../context/TournamentContext';
 
 type SortField = 'name' | 'group' | 'matches' | 'restDays' | 'avgRest';
@@ -167,7 +167,7 @@ const TeamScheduleStats = () => {
     <div className="space-y-6">
       <div className="flex flex-wrap justify-between items-center mb-4">
         <h2 className="text-xl font-bold text-gray-800 flex items-center">
-          <ChartBar className="mr-2 h-5 w-5 text-blue-600" />
+          <Trophy className="mr-2 h-5 w-5 text-blue-600" />
           Statistik Jadwal Tim
         </h2>
         
