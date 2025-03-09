@@ -1,4 +1,4 @@
-import { Shield, Trophy, Calendar, BarChart2 as Bar, Users, AlertCircle } from 'lucide-react';
+import { Shield, Trophy, Calendar, Bar, Users, AlertCircle } from 'lucide-react';
 import { useTournament } from '../context/TournamentContext';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -6,7 +6,17 @@ import { Link } from 'react-router-dom';
 const HomePage = () => {
   const { teams, getTeam, getKlasemenGrup, pertandingan } = useTournament();
   const [activeGrup, setActiveGrup] = useState<string>('A');
-  const [nextMatches, setNextMatches] = useState<any[]>([]);
+  interface Match {
+    id: string;
+    tanggal: string;
+    waktu: string;
+    grup: string;
+    timA: string;
+    timB: string;
+    hasil?: any;
+  }
+
+  const [nextMatches, setNextMatches] = useState<Match[]>([]);
   
   const klasemenGrup = getKlasemenGrup(activeGrup);
 
