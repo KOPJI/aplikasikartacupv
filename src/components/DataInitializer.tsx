@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTournament } from '../context/TournamentContext';
 import { 
   initializeTeamsToFirestore, 
   initializePlayersToFirestore,
   deleteCollectionData,
   getTeamsFromFirestore,
-  getPlayersFromFirestore
+  getPlayersFromFirestore,
+  db
 } from '../services/firebase';
-import { ArrowUpFromLine, ArrowDownToLine, Database, Loader, Trash2 } from 'lucide-react';
+import { ArrowUpFromLine, ArrowDownToLine, Database, Loader, Trash2, AlertCircle } from 'lucide-react';
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 
 const DataInitializer = () => {
   const { teams, loadTeamsFromFirestore } = useTournament();
@@ -17,9 +19,39 @@ const DataInitializer = () => {
     type: 'success' | 'error' | 'info' | null;
     message: string;
   }>({ type: null, message: '' });
+  const [firebaseConnected, setFirebaseConnected] = useState<boolean | null>(null);
+
+  // Periksa koneksi Firebase saat komponen dimuat
+  useEffect(() => {
+    const checkFirebaseConnection = async () => {
+      try {
+        // Coba mengambil data sederhana untuk memeriksa koneksi
+        const testCollection = await getTeamsFromFirestore();
+        console.log("Firebase connection successful");
+        setFirebaseConnected(true);
+      } catch (error) {
+        console.error("Firebase connection error:", error);
+        setFirebaseConnected(false);
+        setStatus({
+          type: 'error',
+          message: `Gagal terhubung ke Firebase: ${error instanceof Error ? error.message : String(error)}`
+        });
+      }
+    };
+
+    checkFirebaseConnection();
+  }, []);
 
   // Fungsi untuk menginisialisasi data tim ke Firestore
   const handleInitializeTeams = async () => {
+    if (!firebaseConnected) {
+      setStatus({
+        type: 'error',
+        message: 'Tidak dapat terhubung ke Firebase. Periksa konfigurasi Firebase Anda.'
+      });
+      return;
+    }
+
     try {
       setIsLoading(true);
       setStatus({ type: 'info', message: 'Menginisialisasi data tim ke Firestore...' });
@@ -43,6 +75,14 @@ const DataInitializer = () => {
 
   // Fungsi untuk menginisialisasi data pemain ke Firestore
   const handleInitializePlayers = async () => {
+    if (!firebaseConnected) {
+      setStatus({
+        type: 'error',
+        message: 'Tidak dapat terhubung ke Firebase. Periksa konfigurasi Firebase Anda.'
+      });
+      return;
+    }
+
     try {
       setIsLoading(true);
       setStatus({ type: 'info', message: 'Menginisialisasi data pemain ke Firestore...' });
@@ -66,6 +106,14 @@ const DataInitializer = () => {
 
   // Fungsi untuk menginisialisasi data tim dan pemain sekaligus
   const handleInitializeAll = async () => {
+    if (!firebaseConnected) {
+      setStatus({
+        type: 'error',
+        message: 'Tidak dapat terhubung ke Firebase. Periksa konfigurasi Firebase Anda.'
+      });
+      return;
+    }
+
     try {
       setIsLoading(true);
       setStatus({ type: 'info', message: 'Menginisialisasi data tim dan pemain ke Firestore...' });
@@ -93,6 +141,14 @@ const DataInitializer = () => {
 
   // Fungsi untuk mengambil data dari Firestore
   const handleLoadFromFirestore = async () => {
+    if (!firebaseConnected) {
+      setStatus({
+        type: 'error',
+        message: 'Tidak dapat terhubung ke Firebase. Periksa konfigurasi Firebase Anda.'
+      });
+      return;
+    }
+
     try {
       setIsLoading(true);
       setStatus({ type: 'info', message: 'Mengambil data dari Firestore...' });
@@ -123,6 +179,14 @@ const DataInitializer = () => {
 
   // Fungsi untuk menghapus data tim
   const handleDeleteTeams = async () => {
+    if (!firebaseConnected) {
+      setStatus({
+        type: 'error',
+        message: 'Tidak dapat terhubung ke Firebase. Periksa konfigurasi Firebase Anda.'
+      });
+      return;
+    }
+
     if (!window.confirm('Apakah Anda yakin ingin menghapus semua data tim dari Firestore?')) {
       return;
     }
@@ -150,6 +214,14 @@ const DataInitializer = () => {
 
   // Fungsi untuk menghapus data pemain
   const handleDeletePlayers = async () => {
+    if (!firebaseConnected) {
+      setStatus({
+        type: 'error',
+        message: 'Tidak dapat terhubung ke Firebase. Periksa konfigurasi Firebase Anda.'
+      });
+      return;
+    }
+
     if (!window.confirm('Apakah Anda yakin ingin menghapus semua data pemain dari Firestore?')) {
       return;
     }
@@ -192,6 +264,19 @@ const DataInitializer = () => {
           Data yang sudah ada di Firestore akan diperbarui jika memiliki ID yang sama.
         </p>
 
+        {firebaseConnected === false && (
+          <div className="mb-6 p-4 rounded-md bg-red-50 text-red-700 border border-red-200 flex items-start">
+            <AlertCircle className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="font-semibold">Tidak dapat terhubung ke Firebase</p>
+              <p className="text-sm mt-1">
+                Pastikan konfigurasi Firebase Anda benar dan Anda memiliki koneksi internet yang stabil.
+                Periksa juga apakah Project ID dan kredensial lainnya sudah benar.
+              </p>
+            </div>
+          </div>
+        )}
+
         {status.type && (
           <div className={`mb-6 p-4 rounded-md ${
             status.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 
@@ -205,7 +290,7 @@ const DataInitializer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
           <button
             onClick={handleInitializeTeams}
-            disabled={isLoading}
+            disabled={isLoading || firebaseConnected === false}
             className="flex items-center justify-center bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-3 px-6 rounded-md shadow-sm transition-colors"
           >
             {isLoading ? (
@@ -218,7 +303,7 @@ const DataInitializer = () => {
 
           <button
             onClick={handleInitializePlayers}
-            disabled={isLoading}
+            disabled={isLoading || firebaseConnected === false}
             className="flex items-center justify-center bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white py-3 px-6 rounded-md shadow-sm transition-colors"
           >
             {isLoading ? (
@@ -232,7 +317,7 @@ const DataInitializer = () => {
 
         <button
           onClick={handleInitializeAll}
-          disabled={isLoading}
+          disabled={isLoading || firebaseConnected === false}
           className="w-full flex items-center justify-center bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white py-3 px-6 rounded-md shadow-sm transition-colors mb-8"
         >
           {isLoading ? (
@@ -247,7 +332,7 @@ const DataInitializer = () => {
           <h3 className="text-lg font-semibold mb-4 text-gray-800">Ambil Data dari Firestore</h3>
           <button
             onClick={handleLoadFromFirestore}
-            disabled={isLoading}
+            disabled={isLoading || firebaseConnected === false}
             className="w-full flex items-center justify-center bg-amber-600 hover:bg-amber-700 disabled:bg-amber-400 text-white py-3 px-6 rounded-md shadow-sm transition-colors"
           >
             {isLoading ? (
@@ -268,7 +353,7 @@ const DataInitializer = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <button
               onClick={handleDeleteTeams}
-              disabled={isLoading}
+              disabled={isLoading || firebaseConnected === false}
               className="flex items-center justify-center bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white py-3 px-6 rounded-md shadow-sm transition-colors"
             >
               {isLoading ? (
@@ -281,7 +366,7 @@ const DataInitializer = () => {
 
             <button
               onClick={handleDeletePlayers}
-              disabled={isLoading}
+              disabled={isLoading || firebaseConnected === false}
               className="flex items-center justify-center bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white py-3 px-6 rounded-md shadow-sm transition-colors"
             >
               {isLoading ? (

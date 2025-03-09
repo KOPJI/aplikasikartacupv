@@ -41,4 +41,5 @@ declare module 'lucide-react' {
   export const ChartLine: Icon;
   export const House: Icon;
   export const UserRound: Icon;
+  export const AlertCircle: Icon;
 } 
