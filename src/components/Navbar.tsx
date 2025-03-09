@@ -84,8 +84,8 @@ const Navbar = () => {
                   }`
                 }
               >
-                <Shield className="h-4 w-4 mr-1" />
-                Tim
+                <Users className="h-4 w-4 mr-1" />
+                Tim & Pemain
               </NavLink>
               <NavLink
                 to="/grup"
@@ -99,19 +99,6 @@ const Navbar = () => {
               >
                 <Trophy className="h-4 w-4 mr-1" />
                 Grup
-              </NavLink>
-              <NavLink
-                to="/manajemen-pemain"
-                className={({ isActive }) =>
-                  `inline-flex items-center px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                    isActive
-                      ? "bg-green-900 text-white shadow-md transform scale-105"
-                      : "text-green-100 hover:bg-green-600 hover:text-white"
-                  }`
-                }
-              >
-                <Users className="h-4 w-4 mr-1" />
-                Pemain
               </NavLink>
               <NavLink
                 to="/statistik"
@@ -154,7 +141,7 @@ const Navbar = () => {
       
       {/* Mobile Navigation */}
       <div className="sm:hidden fixed bottom-0 left-0 z-50 w-full h-16 bg-gradient-to-r from-green-800 to-green-600 border-t border-green-900 shadow-lg">
-        <div className="grid h-full max-w-lg grid-cols-5 mx-auto">
+        <div className="grid h-full max-w-lg grid-cols-4 mx-auto">
           <NavLink
             to="/"
             className={({ isActive }) =>
@@ -178,15 +165,15 @@ const Navbar = () => {
             <span className="text-xs mt-1">Klasemen</span>
           </NavLink>
           <NavLink
-            to="/babak-gugur"
+            to="/tim"
             className={({ isActive }) =>
               isActive
                 ? "bg-green-900 flex flex-col items-center justify-center text-white"
                 : "flex flex-col items-center justify-center text-green-100 hover:bg-green-700"
             }
           >
-            <Shield className="h-5 w-5" />
-            <span className="text-xs mt-1">Gugur</span>
+            <Users className="h-5 w-5" />
+            <span className="text-xs mt-1">Tim & Pemain</span>
           </NavLink>
           <div className="relative">
             <button 
@@ -200,17 +187,6 @@ const Navbar = () => {
             {mobileMenuOpen && (
               <div className="absolute bottom-16 right-0 w-48 bg-green-800 rounded-t-lg shadow-lg py-2 border border-green-900 border-b-0">
                 <NavLink
-                  to="/tim"
-                  className={({ isActive }) =>
-                    `block px-4 py-2 text-sm ${isActive ? "bg-green-900 text-white" : "text-green-100 hover:bg-green-700"}`
-                  }
-                >
-                  <div className="flex items-center">
-                    <Shield className="h-4 w-4 mr-2" />
-                    <span>Tim</span>
-                  </div>
-                </NavLink>
-                <NavLink
                   to="/grup"
                   className={({ isActive }) =>
                     `block px-4 py-2 text-sm ${isActive ? "bg-green-900 text-white" : "text-green-100 hover:bg-green-700"}`
@@ -222,14 +198,14 @@ const Navbar = () => {
                   </div>
                 </NavLink>
                 <NavLink
-                  to="/manajemen-pemain"
+                  to="/babak-gugur"
                   className={({ isActive }) =>
                     `block px-4 py-2 text-sm ${isActive ? "bg-green-900 text-white" : "text-green-100 hover:bg-green-700"}`
                   }
                 >
                   <div className="flex items-center">
-                    <Users className="h-4 w-4 mr-2" />
-                    <span>Pemain</span>
+                    <Shield className="h-4 w-4 mr-2" />
+                    <span>Babak Gugur</span>
                   </div>
                 </NavLink>
                 <NavLink
