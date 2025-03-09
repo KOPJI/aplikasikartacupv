@@ -625,6 +625,44 @@ const JadwalPertandingan = () => {
             <p>• Tidak ada tim yang bermain dua kali dalam sehari.</p>
             <p>• Tidak ada tim yang bermain di hari berturut-turut.</p>
             <p>• Rata-rata waktu istirahat antar pertandingan untuk setiap tim: <span className="font-medium">3-5 hari</span>.</p>
+            
+            {/* Peringatan untuk hari dengan jumlah pertandingan tidak tepat 3 */}
+            {Object.entries(
+              availableDates.reduce((acc, date) => {
+                const matchesOnDate = pertandingan.filter(m => m.tanggal === date).length;
+                acc[date] = matchesOnDate;
+                return acc;
+              }, {} as Record<string, number>)
+            ).filter(([_, count]) => count !== 3).length > 0 && (
+              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                <p className="text-yellow-700 font-medium flex items-center">
+                  <AlertCircle className="h-4 w-4 mr-2" />
+                  Peringatan:
+                </p>
+                <p className="text-yellow-600 mt-1">
+                  Beberapa hari memiliki jumlah pertandingan tidak tepat 3. Ini hanya diperbolehkan untuk jadwal yang tersisa dan tidak ada pilihan lain.
+                </p>
+                <div className="mt-2 max-h-32 overflow-y-auto">
+                  <ul className="list-disc pl-5 text-yellow-600">
+                    {Object.entries(
+                      availableDates.reduce((acc, date) => {
+                        const matchesOnDate = pertandingan.filter(m => m.tanggal === date).length;
+                        acc[date] = matchesOnDate;
+                        return acc;
+                      }, {} as Record<string, number>)
+                    )
+                      .filter(([_, count]) => count !== 3)
+                      .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+                      .map(([date, count]) => (
+                        <li key={date}>
+                          {formatDate(date)}: {count} pertandingan
+                        </li>
+                      ))
+                    }
+                  </ul>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

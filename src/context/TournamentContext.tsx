@@ -328,7 +328,7 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
         }
         
         // PERSYARATAN KETAT 8: Periksa jumlah pertandingan pada hari ini
-        // Harus tepat 3 pertandingan per hari, tidak lebih dan tidak kurang
+        // Harus tepat 3 pertandingan per hari, tidak lebih
         const matchesOnThisDate = matchesPerDay[date];
         if (matchesOnThisDate >= jamPertandingan.length) {
           continue; // Skip jika hari ini sudah memiliki 3 pertandingan
@@ -361,7 +361,7 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
         // Kita ingin mengisi hari yang sudah memiliki pertandingan terlebih dahulu
         // sampai mencapai 3 pertandingan per hari
         if (matchesOnThisDate > 0) {
-          dateScore += 20; // Bonus besar untuk hari yang sudah memiliki pertandingan
+          dateScore += 30; // Meningkatkan bonus untuk hari yang sudah memiliki pertandingan
         }
         
         // Factor 3: Prefer earlier dates (slight bias)
@@ -511,88 +511,193 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
     }
     
     // PERSYARATAN KETAT 10: Pastikan setiap hari memiliki tepat 3 pertandingan
-    // Jika ada hari dengan kurang dari 3 pertandingan, hapus hari tersebut
-    // dan pindahkan pertandingannya ke hari lain yang belum penuh
+    // Identifikasi hari dengan pertandingan kurang dari 3
     const daysWithIncompleteMatches = Object.entries(matchesPerDay)
       .filter(([date, count]) => count > 0 && count < jamPertandingan.length)
-      .map(([date]) => date);
+      .map(([date]) => date)
+      .sort();
     
+    // Jika ada hari dengan pertandingan kurang dari 3, coba pindahkan pertandingan dari hari lain
     if (daysWithIncompleteMatches.length > 0) {
-      // Untuk setiap hari dengan pertandingan tidak lengkap
-      for (const date of daysWithIncompleteMatches) {
-        // Dapatkan pertandingan pada hari tersebut
-        const matchesOnThisDay = scheduledMatches.filter(m => m.tanggal === date);
+      console.log(`Ada ${daysWithIncompleteMatches.length} hari dengan pertandingan kurang dari 3:`, daysWithIncompleteMatches);
+      
+      // Untuk setiap hari dengan pertandingan kurang dari 3
+      for (const dateWithTooFew of daysWithIncompleteMatches) {
+        // Hitung berapa pertandingan yang perlu ditambahkan
+        const neededMatches = jamPertandingan.length - matchesPerDay[dateWithTooFew];
+        console.log(`Hari ${dateWithTooFew} membutuhkan ${neededMatches} pertandingan lagi`);
         
-        // Untuk setiap pertandingan, coba pindahkan ke hari lain
-        for (const match of matchesOnThisDay) {
-          // Cari hari yang belum penuh
-          const availableDays = Object.entries(matchesPerDay)
-            .filter(([d, count]) => d !== date && count < jamPertandingan.length)
-            .map(([d]) => d)
-            .sort(); // Urutkan berdasarkan tanggal
+        // Cari hari dengan pertandingan yang bisa dipindahkan
+        // Prioritaskan hari dengan pertandingan lebih dari 3 (jika ada)
+        const daysWithExtraMatches = Object.entries(matchesPerDay)
+          .filter(([date, count]) => count > jamPertandingan.length)
+          .map(([date]) => date)
+          .sort();
+        
+        // Jika ada hari dengan pertandingan lebih dari 3, pindahkan dari sana terlebih dahulu
+        if (daysWithExtraMatches.length > 0) {
+          for (const dateWithTooMany of daysWithExtraMatches) {
+            // Dapatkan pertandingan pada hari tersebut
+            const matchesOnThisDay = scheduledMatches.filter(m => m.tanggal === dateWithTooMany);
+            
+            // Urutkan pertandingan berdasarkan waktu
+            matchesOnThisDay.sort((a, b) => a.waktu.localeCompare(b.waktu));
+            
+            // Ambil pertandingan terakhir untuk dipindahkan
+            const matchesToMove = matchesOnThisDay.slice(-Math.min(neededMatches, matchesOnThisDay.length - jamPertandingan.length));
+            
+            for (const match of matchesToMove) {
+              // Dapatkan tim yang terlibat
+              const teamA = match.timA;
+              const teamB = match.timB;
+              
+              // Periksa apakah tim bermain pada hari tersebut
+              const teamAPlaysOnNewDate = scheduledMatches.some(m => 
+                m.id !== match.id && m.tanggal === dateWithTooFew && (m.timA === teamA || m.timB === teamA)
+              );
+              
+              const teamBPlaysOnNewDate = scheduledMatches.some(m => 
+                m.id !== match.id && m.tanggal === dateWithTooFew && (m.timA === teamB || m.timB === teamB)
+              );
+              
+              // Periksa apakah tim bermain di hari sebelumnya atau berikutnya
+              const prevDate = new Date(dateWithTooFew);
+              prevDate.setDate(prevDate.getDate() - 1);
+              const prevDateStr = prevDate.toISOString().split('T')[0];
+              
+              const nextDate = new Date(dateWithTooFew);
+              nextDate.setDate(nextDate.getDate() + 1);
+              const nextDateStr = nextDate.toISOString().split('T')[0];
+              
+              const teamAPlaysOnAdjacentDays = scheduledMatches.some(m => 
+                m.id !== match.id && (m.tanggal === prevDateStr || m.tanggal === nextDateStr) && 
+                (m.timA === teamA || m.timB === teamA)
+              );
+              
+              const teamBPlaysOnAdjacentDays = scheduledMatches.some(m => 
+                m.id !== match.id && (m.tanggal === prevDateStr || m.tanggal === nextDateStr) && 
+                (m.timA === teamB || m.timB === teamB)
+              );
+              
+              // Jika tim tidak bermain pada hari tersebut dan tidak bermain di hari berturut-turut
+              if (!teamAPlaysOnNewDate && !teamBPlaysOnNewDate && 
+                  !teamAPlaysOnAdjacentDays && !teamBPlaysOnAdjacentDays) {
+                // Hitung jumlah pertandingan pada hari baru
+                const matchesOnNewDate = scheduledMatches.filter(m => m.tanggal === dateWithTooFew && m.id !== match.id).length;
+                
+                // Pindahkan pertandingan ke hari baru
+                match.tanggal = dateWithTooFew;
+                match.waktu = jamPertandingan[matchesOnNewDate];
+                
+                // Update match count
+                matchesPerDay[dateWithTooMany]--;
+                matchesPerDay[dateWithTooFew]++;
+                
+                console.log(`Memindahkan pertandingan ${getTeam(match.timA)?.nama} vs ${getTeam(match.timB)?.nama} dari ${dateWithTooMany} ke ${dateWithTooFew}`);
+                
+                // Jika hari ini sudah memiliki 3 pertandingan, keluar dari loop
+                if (matchesPerDay[dateWithTooFew] === jamPertandingan.length) {
+                  break;
+                }
+              }
+            }
+            
+            // Jika hari ini sudah memiliki 3 pertandingan, keluar dari loop
+            if (matchesPerDay[dateWithTooFew] === jamPertandingan.length) {
+              break;
+            }
+          }
+        }
+        
+        // Jika masih membutuhkan pertandingan, coba pindahkan dari hari lain
+        if (matchesPerDay[dateWithTooFew] < jamPertandingan.length) {
+          // Dapatkan semua hari dengan pertandingan
+          const allDaysWithMatches = Object.entries(matchesPerDay)
+            .filter(([date, count]) => count > 0 && count <= jamPertandingan.length && date !== dateWithTooFew)
+            .map(([date]) => date)
+            .sort();
           
-          if (availableDays.length > 0) {
-            // Pilih hari pertama yang tersedia
-            const newDate = availableDays[0];
+          // Prioritaskan hari dengan 3 pertandingan yang bisa dipindahkan
+          for (const dateWithMatches of allDaysWithMatches) {
+            // Dapatkan pertandingan pada hari tersebut
+            const matchesOnThisDay = scheduledMatches.filter(m => m.tanggal === dateWithMatches);
             
-            // Dapatkan tim yang terlibat
-            const teamA = match.timA;
-            const teamB = match.timB;
+            // Urutkan pertandingan berdasarkan waktu
+            matchesOnThisDay.sort((a, b) => a.waktu.localeCompare(b.waktu));
             
-            // Periksa apakah tim bermain pada hari tersebut
-            const teamAPlaysOnNewDate = scheduledMatches.some(m => 
-              m.id !== match.id && m.tanggal === newDate && (m.timA === teamA || m.timB === teamA)
-            );
-            
-            const teamBPlaysOnNewDate = scheduledMatches.some(m => 
-              m.id !== match.id && m.tanggal === newDate && (m.timA === teamB || m.timB === teamB)
-            );
-            
-            // Periksa apakah tim bermain di hari sebelumnya atau berikutnya
-            const prevDate = new Date(newDate);
-            prevDate.setDate(prevDate.getDate() - 1);
-            const prevDateStr = prevDate.toISOString().split('T')[0];
-            
-            const nextDate = new Date(newDate);
-            nextDate.setDate(nextDate.getDate() + 1);
-            const nextDateStr = nextDate.toISOString().split('T')[0];
-            
-            const teamAPlaysOnAdjacentDays = scheduledMatches.some(m => 
-              m.id !== match.id && (m.tanggal === prevDateStr || m.tanggal === nextDateStr) && 
-              (m.timA === teamA || m.timB === teamA)
-            );
-            
-            const teamBPlaysOnAdjacentDays = scheduledMatches.some(m => 
-              m.id !== match.id && (m.tanggal === prevDateStr || m.tanggal === nextDateStr) && 
-              (m.timA === teamB || m.timB === teamB)
-            );
-            
-            // Jika tim tidak bermain pada hari tersebut dan tidak bermain di hari berturut-turut
-            if (!teamAPlaysOnNewDate && !teamBPlaysOnNewDate && 
-                !teamAPlaysOnAdjacentDays && !teamBPlaysOnAdjacentDays) {
-              // Pindahkan pertandingan ke hari baru
-              const timeSlot = matchesPerDay[newDate];
+            // Coba pindahkan satu pertandingan
+            for (const match of matchesOnThisDay) {
+              // Dapatkan tim yang terlibat
+              const teamA = match.timA;
+              const teamB = match.timB;
               
-              // Update pertandingan
-              match.tanggal = newDate;
-              match.waktu = jamPertandingan[timeSlot];
+              // Periksa apakah tim bermain pada hari tersebut
+              const teamAPlaysOnNewDate = scheduledMatches.some(m => 
+                m.id !== match.id && m.tanggal === dateWithTooFew && (m.timA === teamA || m.timB === teamA)
+              );
               
-              // Update match count
-              matchesPerDay[date]--;
-              matchesPerDay[newDate]++;
+              const teamBPlaysOnNewDate = scheduledMatches.some(m => 
+                m.id !== match.id && m.tanggal === dateWithTooFew && (m.timA === teamB || m.timB === teamB)
+              );
+              
+              // Periksa apakah tim bermain di hari sebelumnya atau berikutnya
+              const prevDate = new Date(dateWithTooFew);
+              prevDate.setDate(prevDate.getDate() - 1);
+              const prevDateStr = prevDate.toISOString().split('T')[0];
+              
+              const nextDate = new Date(dateWithTooFew);
+              nextDate.setDate(nextDate.getDate() + 1);
+              const nextDateStr = nextDate.toISOString().split('T')[0];
+              
+              const teamAPlaysOnAdjacentDays = scheduledMatches.some(m => 
+                m.id !== match.id && (m.tanggal === prevDateStr || m.tanggal === nextDateStr) && 
+                (m.timA === teamA || m.timB === teamA)
+              );
+              
+              const teamBPlaysOnAdjacentDays = scheduledMatches.some(m => 
+                m.id !== match.id && (m.tanggal === prevDateStr || m.tanggal === nextDateStr) && 
+                (m.timA === teamB || m.timB === teamB)
+              );
+              
+              // Jika tim tidak bermain pada hari tersebut dan tidak bermain di hari berturut-turut
+              if (!teamAPlaysOnNewDate && !teamBPlaysOnNewDate && 
+                  !teamAPlaysOnAdjacentDays && !teamBPlaysOnAdjacentDays) {
+                // Hitung jumlah pertandingan pada hari baru
+                const matchesOnNewDate = scheduledMatches.filter(m => m.tanggal === dateWithTooFew && m.id !== match.id).length;
+                
+                // Pindahkan pertandingan ke hari baru
+                match.tanggal = dateWithTooFew;
+                match.waktu = jamPertandingan[matchesOnNewDate];
+                
+                // Update match count
+                matchesPerDay[dateWithMatches]--;
+                matchesPerDay[dateWithTooFew]++;
+                
+                console.log(`Memindahkan pertandingan ${getTeam(match.timA)?.nama} vs ${getTeam(match.timB)?.nama} dari ${dateWithMatches} ke ${dateWithTooFew}`);
+                
+                // Jika hari ini sudah memiliki 3 pertandingan, keluar dari loop
+                if (matchesPerDay[dateWithTooFew] === jamPertandingan.length) {
+                  break;
+                }
+              }
+            }
+            
+            // Jika hari ini sudah memiliki 3 pertandingan, keluar dari loop
+            if (matchesPerDay[dateWithTooFew] === jamPertandingan.length) {
+              break;
             }
           }
         }
       }
     }
     
-    // Jika masih ada hari dengan pertandingan tidak lengkap, hapus hari tersebut
-    // dan jadwalkan ulang pertandingannya di akhir jadwal
+    // Jika masih ada hari dengan pertandingan kurang dari 3, coba jadwalkan pertandingan baru
     const remainingIncompleteMatches = Object.entries(matchesPerDay)
       .filter(([date, count]) => count > 0 && count < jamPertandingan.length);
     
     if (remainingIncompleteMatches.length > 0) {
-      console.warn(`Masih ada ${remainingIncompleteMatches.length} hari dengan pertandingan tidak lengkap.`);
+      console.warn(`Masih ada ${remainingIncompleteMatches.length} hari dengan pertandingan tidak lengkap setelah optimasi.`);
+      console.warn("Hari-hari tersebut:", remainingIncompleteMatches.map(([date, count]) => `${date}: ${count} pertandingan`).join(", "));
     }
     
     return scheduledMatches;
@@ -650,6 +755,31 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
         violations.push(`Tim ${teamA} atau ${teamB} bermain pada hari berturut-turut (${match.tanggal} dan ${nextDateStr})`);
       }
     });
+    
+    // Check untuk jumlah pertandingan per hari
+    const matchesPerDay: { [date: string]: number } = {};
+    pertandingan.forEach(match => {
+      matchesPerDay[match.tanggal] = (matchesPerDay[match.tanggal] || 0) + 1;
+    });
+    
+    // Identifikasi hari dengan jumlah pertandingan tidak tepat 3
+    const daysWithIncorrectMatchCount = Object.entries(matchesPerDay)
+      .filter(([date, count]) => count !== jamPertandingan.length);
+    
+    // Jika ada hari dengan jumlah pertandingan tidak tepat 3, tambahkan peringatan
+    // Kecuali untuk hari terakhir jika jumlah pertandingan total tidak habis dibagi 3
+    if (daysWithIncorrectMatchCount.length > 0) {
+      // Urutkan tanggal
+      const sortedDates = Object.keys(matchesPerDay).sort();
+      const lastDate = sortedDates[sortedDates.length - 1];
+      
+      daysWithIncorrectMatchCount.forEach(([date, count]) => {
+        // Jika ini bukan hari terakhir atau jika ini hari terakhir tapi jumlah pertandingan total habis dibagi 3
+        if (date !== lastDate || pertandingan.length % jamPertandingan.length === 0) {
+          violations.push(`Tanggal ${date} memiliki ${count} pertandingan, seharusnya tepat ${jamPertandingan.length} pertandingan`);
+        }
+      });
+    }
     
     return {
       isValid: violations.length === 0,
