@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 const HomePage = () => {
-  const { teams, getPencetakGolTerbanyak, getTeam, getKlasemenGrup, getPertandinganByTanggal } = useTournament();
+  const { teams, getPencetakGolTerbanyak, getTeam, getKlasemenGrup, pertandingan } = useTournament();
   const [activeGrup, setActiveGrup] = useState<string>('A');
   const [nextMatches, setNextMatches] = useState<any[]>([]);
   
@@ -62,7 +62,7 @@ const HomePage = () => {
     const todayStr = today.toISOString().split('T')[0];
     
     // Dapatkan semua pertandingan yang belum dimainkan
-    const upcomingMatches = useTournament().pertandingan
+    const upcomingMatches = pertandingan
       .filter(match => !match.hasil && match.tanggal >= todayStr)
       .sort((a, b) => {
         // Urutkan berdasarkan tanggal dan waktu
@@ -74,7 +74,7 @@ const HomePage = () => {
       .slice(0, 3); // Ambil 3 pertandingan terdekat
     
     setNextMatches(upcomingMatches);
-  }, []);
+  }, [pertandingan]);
 
   const playersWithCards = getPlayersWithCards();
   const bannedPlayers = getBannedPlayers();
