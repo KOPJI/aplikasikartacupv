@@ -27,6 +27,30 @@ const Navbar = () => {
                 Beranda
               </NavLink>
               <NavLink
+                to="/jadwal"
+                className={({ isActive }) =>
+                  `inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                    isActive
+                      ? "border-blue-500 text-gray-900"
+                      : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                  }`
+                }
+              >
+                Jadwal
+              </NavLink>
+              <NavLink
+                to="/klasemen"
+                className={({ isActive }) =>
+                  `inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                    isActive
+                      ? "border-blue-500 text-gray-900"
+                      : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                  }`
+                }
+              >
+                Klasemen
+              </NavLink>
+              <NavLink
                 to="/manajemen-pemain"
                 className={({ isActive }) =>
                   `inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
@@ -57,7 +81,7 @@ const Navbar = () => {
       
       {/* Mobile Navigation */}
       <div className="sm:hidden fixed bottom-0 left-0 z-50 w-full h-16 bg-white border-t border-gray-200">
-        <div className="grid h-full max-w-lg grid-cols-4 mx-auto">
+        <div className="grid h-full max-w-lg grid-cols-5 mx-auto">
           <NavLink
             to="/"
             className={({ isActive }) =>
@@ -70,7 +94,18 @@ const Navbar = () => {
             <span>Beranda</span>
           </NavLink>
           <NavLink
-            to="/statistik"
+            to="/jadwal"
+            className={({ isActive }) =>
+              isActive
+                ? "bg-green-600 flex flex-col items-center px-3 py-2 rounded-md text-xs font-medium"
+                : "flex flex-col items-center px-3 py-2 rounded-md text-xs font-medium hover:bg-green-600 hover:bg-opacity-75"
+            }
+          >
+            <Calendar className="h-5 w-5" />
+            <span>Jadwal</span>
+          </NavLink>
+          <NavLink
+            to="/klasemen"
             className={({ isActive }) =>
               isActive
                 ? "bg-green-600 flex flex-col items-center px-3 py-2 rounded-md text-xs font-medium"
@@ -78,10 +113,10 @@ const Navbar = () => {
             }
           >
             <Trophy className="h-5 w-5" />
-            <span>Statistik</span>
+            <span>Klasemen</span>
           </NavLink>
           <NavLink
-            to="/firebase-integration"
+            to="/statistik"
             className={({ isActive }) =>
               isActive
                 ? "bg-green-600 flex flex-col items-center px-3 py-2 rounded-md text-xs font-medium"
@@ -89,7 +124,7 @@ const Navbar = () => {
             }
           >
             <Database className="h-5 w-5" />
-            <span>Data</span>
+            <span>Statistik</span>
           </NavLink>
           <NavLink
             to="/manajemen-pemain"
@@ -100,7 +135,7 @@ const Navbar = () => {
             }
           >
             <Users className="h-5 w-5" />
-            <span>Manajemen Pemain</span>
+            <span>Pemain</span>
           </NavLink>
         </div>
       </div>
