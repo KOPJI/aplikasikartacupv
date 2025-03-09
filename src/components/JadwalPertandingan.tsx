@@ -182,25 +182,15 @@ const JadwalPertandingan = () => {
 
   // Handler untuk memperbaiki jadwal yang sudah ada
   const handleFixSchedule = () => {
-    if (window.confirm('Apakah Anda yakin ingin memperbaiki jadwal? Ini akan mengubah jadwal yang sudah ada untuk memastikan semua aturan jadwal dipatuhi.')) {
+    if (window.confirm('Apakah Anda yakin ingin memperbaiki jadwal? Ini akan membuat jadwal baru dari awal.')) {
       setIsLoading(true);
       setStatus({ type: 'info', message: 'Sedang memperbaiki jadwal...' });
-      setShowErrorDetails(false);
-      setErrorDetails([]);
       
       try {
         const result = fixExistingSchedule();
         
         if (result.isValid) {
-          if (result.manualFix) {
-            setStatus({ type: 'success', message: 'Jadwal berhasil diperbaiki secara manual!' });
-          } else if (result.recreated) {
-            setStatus({ type: 'success', message: 'Jadwal berhasil dibuat ulang dan sekarang valid!' });
-          } else if (result.fixed) {
-            setStatus({ type: 'success', message: 'Jadwal berhasil diperbaiki!' });
-          } else {
-            setStatus({ type: 'info', message: 'Jadwal sudah valid, tidak perlu diperbaiki.' });
-          }
+          setStatus({ type: 'success', message: 'Jadwal berhasil dibuat ulang dan sekarang valid!' });
           
           // Perbarui tanggal yang tersedia
           const dates = [...new Set(pertandingan.map(p => p.tanggal))].sort();
@@ -214,24 +204,8 @@ const JadwalPertandingan = () => {
           // Perbarui pesan validasi
           setValidationMessages([]);
         } else {
-          // Simpan detail error
-          const detailMessages = result.messages.length > 1 ? result.messages.slice(1) : [];
-          setErrorDetails(detailMessages);
-          
-          // Tampilkan pesan error utama
-          setStatus({ 
-            type: 'error', 
-            message: result.messages[0] || 'Gagal memperbaiki jadwal. Silakan hubungi administrator.' 
-          });
-          
-          // Validasi jadwal untuk mendapatkan pesan validasi
-          const validationResult = validateSchedule();
-          setValidationMessages(validationResult.messages);
-          
-          // Jika ada detail error, tampilkan tombol untuk melihat detail
-          if (detailMessages.length > 0) {
-            setShowErrorDetails(true);
-          }
+          setStatus({ type: 'error', message: 'Gagal memperbaiki jadwal. ' + result.messages[0] });
+          setValidationMessages(result.messages);
         }
       } catch (error) {
         console.error('Error saat memperbaiki jadwal:', error);
