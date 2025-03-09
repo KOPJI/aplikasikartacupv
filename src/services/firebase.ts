@@ -50,7 +50,15 @@ export const getTeamsFromFirestore = async () => {
   try {
     const teamsCollection = collection(db, 'teams');
     const teamsSnapshot = await getDocs(teamsCollection);
-    const teamsList = teamsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const teamsList = teamsSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        nama: data.nama || '',
+        grup: data.grup || '',
+        ...data
+      };
+    });
     return teamsList;
   } catch (error) {
     console.error("Error mendapatkan data tim:", error);
@@ -87,7 +95,18 @@ export const getPlayersFromFirestore = async () => {
   try {
     const playersCollection = collection(db, 'players');
     const playersSnapshot = await getDocs(playersCollection);
-    const playersList = playersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const playersList = playersSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        nama: data.nama || '',
+        nomorPunggung: data.nomorPunggung || '',
+        posisi: data.posisi || '',
+        timId: data.timId || '',
+        grup: data.grup || '',
+        ...data
+      };
+    });
     return playersList;
   } catch (error) {
     console.error("Error mendapatkan data pemain:", error);
