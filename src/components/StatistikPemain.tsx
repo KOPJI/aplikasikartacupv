@@ -132,6 +132,20 @@ const StatistikPemain = () => {
     return () => clearTimeout(timer);
   }, [activeTab]);
 
+  // Fungsi untuk mendapatkan warna latar belakang dropdown berdasarkan tim yang dipilih
+  const getDropdownStyle = () => {
+    if (filterTeam === 'all') return {};
+    
+    const selectedTeam = teams.find(team => team.id === filterTeam);
+    if (!selectedTeam) return {};
+    
+    const teamColor = getTeamColor(filterTeam);
+    return {
+      borderColor: teamColor,
+      borderWidth: '2px'
+    };
+  };
+
   return (
     <div className="animate-slide-in">
       <div className="card mb-6">
@@ -140,15 +154,21 @@ const StatistikPemain = () => {
             <Trophy className="mr-2 h-6 w-6" />
             Statistik Pemain
           </h1>
-          <div className="flex items-center">
+          <div className="flex items-center space-x-2">
+            <label htmlFor="team-filter" className="font-medium text-gray-700 flex items-center">
+              <Shield className="h-5 w-5 mr-1 text-primary" />
+              Tim:
+            </label>
             <select 
-              className="form-input mr-2 text-sm"
+              id="team-filter"
+              className="form-select px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-base font-medium text-gray-900 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
               value={filterTeam}
               onChange={(e) => setFilterTeam(e.target.value)}
+              style={getDropdownStyle()}
             >
-              <option value="all">Semua Tim</option>
+              <option value="all" className="py-2">Semua Tim</option>
               {teams.map(team => (
-                <option key={team.id} value={team.id}>{team.nama}</option>
+                <option key={team.id} value={team.id} className="py-2">{team.nama}</option>
               ))}
             </select>
           </div>
