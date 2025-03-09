@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Shield, UserPlus, Users } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { useTournament } from '../context/TournamentContext';
 
 const GrupList = () => {
