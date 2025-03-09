@@ -304,6 +304,52 @@ const HomePage = () => {
               </div>
             </div>
           </div>
+
+          {/* Pemain dengan Kartu */}
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden border-t-4 border-yellow-600">
+            <div className="bg-gradient-to-r from-yellow-600 to-yellow-700 p-4 text-white">
+              <h2 className="text-xl font-bold flex items-center">
+                <Squircle className="mr-2 h-5 w-5 text-yellow-300" />
+                Pemain dengan Kartu
+              </h2>
+            </div>
+            
+            <div className="p-4">
+              {playersWithCards.length > 0 ? (
+                <div className="space-y-3">
+                  {playersWithCards.map((pemain) => (
+                    <div key={pemain.id} className="flex items-center p-3 rounded-lg bg-gray-50">
+                      <div className="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                        <span className="text-gray-800 font-bold">{pemain.nomorPunggung}</span>
+                      </div>
+                      <div className="flex-grow">
+                        <div className="text-sm font-medium text-gray-900">{pemain.nama}</div>
+                        <div className="text-xs text-gray-600">{pemain.teamName}</div>
+                      </div>
+                      <div className="flex-shrink-0 flex space-x-2">
+                        {pemain.kartuKuning && pemain.kartuKuning > 0 && (
+                          <div className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full flex items-center">
+                            <div className="w-3 h-4 bg-yellow-400 mr-1 rounded-sm"></div>
+                            <span className="text-xs font-medium">{pemain.kartuKuning}</span>
+                          </div>
+                        )}
+                        {pemain.kartuMerah && pemain.kartuMerah > 0 && (
+                          <div className="px-2 py-1 bg-red-100 text-red-800 rounded-full flex items-center">
+                            <div className="w-3 h-4 bg-red-600 mr-1 rounded-sm"></div>
+                            <span className="text-xs font-medium">{pemain.kartuMerah}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-gray-500">
+                  Belum ada pemain yang mendapatkan kartu
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Right Column */}
@@ -395,16 +441,16 @@ const HomePage = () => {
           </div>
 
           {/* Banned Players */}
-          {bannedPlayers.length > 0 && (
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden border-t-4 border-red-600">
-              <div className="bg-gradient-to-r from-red-600 to-red-700 p-4 text-white">
-                <h2 className="text-xl font-bold flex items-center">
-                  <AlertCircle className="mr-2 h-5 w-5 text-red-200" />
-                  Pemain Dilarang Bermain
-                </h2>
-              </div>
-              
-              <div className="p-4">
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden border-t-4 border-red-600">
+            <div className="bg-gradient-to-r from-red-600 to-red-700 p-4 text-white">
+              <h2 className="text-xl font-bold flex items-center">
+                <AlertCircle className="mr-2 h-5 w-5 text-red-200" />
+                Pemain Dilarang Bermain
+              </h2>
+            </div>
+            
+            <div className="p-4">
+              {bannedPlayers.length > 0 ? (
                 <div className="space-y-3">
                   {bannedPlayers.map((pemain) => (
                     <div key={pemain.id} className="flex items-center p-3 rounded-lg bg-red-50">
@@ -423,9 +469,21 @@ const HomePage = () => {
                     </div>
                   ))}
                 </div>
+              ) : (
+                <div className="text-center py-6 text-gray-500">
+                  Tidak ada pemain yang dilarang bermain
+                </div>
+              )}
+              
+              <div className="mt-4 bg-red-50 p-3 rounded-lg">
+                <h3 className="text-sm font-bold text-red-800 mb-2">Aturan Larangan Bermain:</h3>
+                <ul className="text-xs text-red-700 space-y-1 list-disc pl-4">
+                  <li>Pemain yang mendapatkan 3 kartu kuning akan dilarang bermain di pertandingan selanjutnya</li>
+                  <li>Pemain yang mendapatkan kartu merah langsung akan dilarang bermain di pertandingan selanjutnya</li>
+                </ul>
               </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>
