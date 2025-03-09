@@ -4,6 +4,7 @@ import { ArrowLeft, CirclePlus, Save, Shield, Trash2 } from 'lucide-react';
 import { useTournament, PencetakGol, KartuPemain } from '../context/TournamentContext';
 
 const HasilPertandinganForm = () => {
+  // @ts-ignore
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { 

@@ -6,6 +6,7 @@ import { useTournament } from '../context/TournamentContext';
 const TimForm = () => {
   const { addTeam, getTeam, updateTeam } = useTournament();
   const navigate = useNavigate();
+  // @ts-ignore
   const { id } = useParams<{ id: string }>();
   
   const [formData, setFormData] = useState({

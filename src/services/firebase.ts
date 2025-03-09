@@ -267,7 +267,7 @@ export const initializeTeamsToFirestore = async (teams: any[]) => {
 
 export const initializePlayersToFirestore = async (teams: any[]) => {
   try {
-    const playersPromises = [];
+    const playersPromises: Promise<void>[] = [];
     
     for (const team of teams) {
       if (team.pemain && team.pemain.length > 0) {
