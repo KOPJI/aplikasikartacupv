@@ -106,6 +106,11 @@ interface TournamentContextType {
   updateKlasemen: () => void;
   getKlasemenGrup: (grup: string) => Tim[];
   getPencetakGolTerbanyak: (limit?: number) => Pemain[];
+  
+  // Fungsi untuk menghapus data statistik
+  resetPencetakGol: () => void;
+  resetKartuPemain: () => void;
+  resetLaranganBermain: () => void;
 
   // Babak Gugur
   pertandinganBabakGugur: PertandinganBabakGugur[];
@@ -1807,6 +1812,94 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Fungsi untuk menghapus data pencetak gol
+  const resetPencetakGol = () => {
+    // Buat salinan array tim
+    const updatedTeams = [...teams];
+    
+    // Reset golTotal untuk semua pemain di semua tim
+    updatedTeams.forEach(team => {
+      team.pemain.forEach(player => {
+        player.golTotal = 0;
+      });
+    });
+    
+    // Update state dan localStorage
+    setTeams(updatedTeams);
+    localStorage.setItem('teams', JSON.stringify(updatedTeams));
+    
+    // Reset data gol di hasil pertandingan
+    const updatedMatches = [...pertandingan];
+    updatedMatches.forEach(match => {
+      if (match.hasil) {
+        match.hasil.pencetakGol = [];
+      }
+    });
+    
+    // Update state dan localStorage
+    setPertandingan(updatedMatches);
+    localStorage.setItem('pertandingan', JSON.stringify(updatedMatches));
+    
+    // Reset data gol di babak gugur
+    const updatedKnockout = [...pertandinganBabakGugur];
+    updatedKnockout.forEach(match => {
+      if (match.hasil) {
+        match.hasil.pencetakGol = [];
+      }
+    });
+    
+    // Update state dan localStorage
+    setPertandinganBabakGugur(updatedKnockout);
+    localStorage.setItem('pertandinganBabakGugur', JSON.stringify(updatedKnockout));
+  };
+  
+  // Fungsi untuk menghapus data kartu pemain
+  const resetKartuPemain = () => {
+    // Buat salinan array tim
+    const updatedTeams = [...teams];
+    
+    // Reset kartuKuning dan kartuMerah untuk semua pemain di semua tim
+    updatedTeams.forEach(team => {
+      team.pemain.forEach(player => {
+        player.kartuKuning = 0;
+        player.kartuMerah = 0;
+      });
+    });
+    
+    // Update state dan localStorage
+    setTeams(updatedTeams);
+    localStorage.setItem('teams', JSON.stringify(updatedTeams));
+    
+    // Reset data kartu di hasil pertandingan
+    const updatedMatches = [...pertandingan];
+    updatedMatches.forEach(match => {
+      if (match.hasil) {
+        match.hasil.kartu = [];
+      }
+    });
+    
+    // Update state dan localStorage
+    setPertandingan(updatedMatches);
+    localStorage.setItem('pertandingan', JSON.stringify(updatedMatches));
+    
+    // Reset data kartu di babak gugur
+    const updatedKnockout = [...pertandinganBabakGugur];
+    updatedKnockout.forEach(match => {
+      if (match.hasil) {
+        match.hasil.kartu = [];
+      }
+    });
+    
+    // Update state dan localStorage
+    setPertandinganBabakGugur(updatedKnockout);
+    localStorage.setItem('pertandinganBabakGugur', JSON.stringify(updatedKnockout));
+  };
+  
+  // Fungsi untuk menghapus data larangan bermain (sama dengan resetKartuPemain karena larangan bermain berdasarkan kartu)
+  const resetLaranganBermain = () => {
+    resetKartuPemain();
+  };
+
   return (
     <TournamentContext.Provider value={{
       teams,
@@ -1830,13 +1923,18 @@ export const TournamentProvider = ({ children }: { children: ReactNode }) => {
       getPertandinganByTanggal,
       getPertandinganByTim,
       getRestDaysByTeam,
-      clearSchedule, // Menambahkan fungsi untuk menghapus jadwal
+      clearSchedule,
       
       // Hasil
       simpanHasilPertandingan,
       updateKlasemen,
       getKlasemenGrup,
       getPencetakGolTerbanyak,
+      
+      // Fungsi reset data statistik
+      resetPencetakGol,
+      resetKartuPemain,
+      resetLaranganBermain,
 
       // Babak Gugur
       pertandinganBabakGugur,

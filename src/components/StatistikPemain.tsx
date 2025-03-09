@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Award, Squircle, AlertCircle, Shield, Trophy, ChevronDown, ChevronUp, Users } from 'lucide-react';
+import { Award, Squircle, AlertCircle, Shield, Trophy, ChevronDown, ChevronUp, Users, Trash2 } from 'lucide-react';
 import { useTournament } from '../context/TournamentContext';
 import { Link } from 'react-router-dom';
 
 const StatistikPemain = () => {
-  const { teams, getPencetakGolTerbanyak, getTeam } = useTournament();
+  const { teams, getPencetakGolTerbanyak, getTeam, resetPencetakGol, resetKartuPemain, resetLaranganBermain } = useTournament();
   const [activeTab, setActiveTab] = useState<'topskor' | 'kartu' | 'larangan'>('topskor');
   const [filterTeam, setFilterTeam] = useState<string>('all');
   const [animateCards, setAnimateCards] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<'topskor' | 'kartu' | 'larangan' | null>(null);
   
   // Dapatkan semua pencetak gol
   const topScorers = getPencetakGolTerbanyak(50);
@@ -94,6 +96,26 @@ const StatistikPemain = () => {
     ];
     return colors[teamIndex % colors.length] || 'from-gray-500 to-gray-600';
   };
+  
+  // Fungsi untuk menampilkan dialog konfirmasi
+  const handleShowConfirmDialog = (action: 'topskor' | 'kartu' | 'larangan') => {
+    setConfirmAction(action);
+    setShowConfirmDialog(true);
+  };
+  
+  // Fungsi untuk menghapus data berdasarkan kategori
+  const handleConfirmDelete = () => {
+    if (confirmAction === 'topskor') {
+      resetPencetakGol();
+    } else if (confirmAction === 'kartu') {
+      resetKartuPemain();
+    } else if (confirmAction === 'larangan') {
+      resetLaranganBermain();
+    }
+    
+    setShowConfirmDialog(false);
+    setConfirmAction(null);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-6 px-4">
@@ -179,8 +201,17 @@ const StatistikPemain = () => {
                   <Award className="mr-3 h-7 w-7 text-yellow-200" />
                   Daftar Pencetak Gol
                 </h2>
-                <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-full px-4 py-2 text-sm font-bold">
-                  Total: {filteredTopScorers.length} Pemain
+                <div className="flex items-center space-x-4">
+                  <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-full px-4 py-2 text-sm font-bold">
+                    Total: {filteredTopScorers.length} Pemain
+                  </div>
+                  <button 
+                    onClick={() => handleShowConfirmDialog('topskor')}
+                    className="bg-red-600 hover:bg-red-700 text-white rounded-full p-2 transition-colors duration-200 flex items-center"
+                    title="Hapus semua data pencetak gol"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
                 </div>
               </div>
             </div>
@@ -290,8 +321,17 @@ const StatistikPemain = () => {
                   <Squircle className="mr-3 h-7 w-7 text-orange-200" />
                   Pemain dengan Kartu
                 </h2>
-                <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-full px-4 py-2 text-sm font-bold">
-                  Total: {filteredPlayersWithCards.length} Pemain
+                <div className="flex items-center space-x-4">
+                  <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-full px-4 py-2 text-sm font-bold">
+                    Total: {filteredPlayersWithCards.length} Pemain
+                  </div>
+                  <button 
+                    onClick={() => handleShowConfirmDialog('kartu')}
+                    className="bg-red-600 hover:bg-red-700 text-white rounded-full p-2 transition-colors duration-200 flex items-center"
+                    title="Hapus semua data kartu pemain"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
                 </div>
               </div>
             </div>
@@ -380,8 +420,17 @@ const StatistikPemain = () => {
                   <AlertCircle className="mr-3 h-7 w-7 text-red-200" />
                   Pemain Dilarang Bermain
                 </h2>
-                <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-full px-4 py-2 text-sm font-bold">
-                  Total: {filteredBannedPlayers.length} Pemain
+                <div className="flex items-center space-x-4">
+                  <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-full px-4 py-2 text-sm font-bold">
+                    Total: {filteredBannedPlayers.length} Pemain
+                  </div>
+                  <button 
+                    onClick={() => handleShowConfirmDialog('larangan')}
+                    className="bg-red-600 hover:bg-red-700 text-white rounded-full p-2 transition-colors duration-200 flex items-center"
+                    title="Hapus semua data larangan bermain"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
                 </div>
               </div>
             </div>
@@ -473,6 +522,65 @@ const StatistikPemain = () => {
           </div>
         )}
       </div>
+      
+      {/* Dialog Konfirmasi */}
+      {showConfirmDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fadeIn">
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full animate-scaleIn">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-gray-800">Konfirmasi Hapus Data</h3>
+              <button 
+                onClick={() => setShowConfirmDialog(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+              >
+                &times;
+              </button>
+            </div>
+            
+            <div className="mb-6">
+              <div className="bg-red-50 p-4 rounded-lg mb-4">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <AlertCircle className="h-5 w-5 text-red-600" />
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-red-800">
+                      Peringatan!
+                    </h3>
+                    <div className="mt-2 text-sm text-red-700">
+                      <p>
+                        {confirmAction === 'topskor' && 'Anda akan menghapus semua data pencetak gol. Data yang sudah dihapus tidak dapat dikembalikan.'}
+                        {confirmAction === 'kartu' && 'Anda akan menghapus semua data kartu pemain. Data yang sudah dihapus tidak dapat dikembalikan.'}
+                        {confirmAction === 'larangan' && 'Anda akan menghapus semua data larangan bermain. Data yang sudah dihapus tidak dapat dikembalikan.'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <p className="text-gray-600 text-sm">
+                Apakah Anda yakin ingin melanjutkan?
+              </p>
+            </div>
+            
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowConfirmDialog(false)}
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-gray-800 font-medium transition-colors duration-200"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white font-medium transition-colors duration-200 flex items-center"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Hapus Data
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
