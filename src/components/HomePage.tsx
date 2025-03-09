@@ -210,21 +210,21 @@ const HomePage = () => {
                   >
                     Grup {grup}
                   </button>
-                ))}
-              </div>
-            </div>
-            
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          ))}
+        </div>
+      </div>
+        
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Pos
-                    </th>
-                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Tim
-                    </th>
-                    <th scope="col" className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                </th>
+                <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Tim
+                </th>
+                <th scope="col" className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                       M
                     </th>
                     <th scope="col" className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -241,10 +241,10 @@ const HomePage = () => {
                     </th>
                     <th scope="col" className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider font-bold">
                       P
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
                   {klasemenGrup.map((tim, index) => (
                     <tr key={tim.id} className={index < 2 ? "bg-green-50" : ""}>
                       <td className="px-3 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -286,14 +286,14 @@ const HomePage = () => {
                       </td>
                     </tr>
                   ))}
-                </tbody>
-              </table>
-            </div>
+            </tbody>
+          </table>
+        </div>
             
             {klasemenGrup.length < 1 && (
               <div className="text-center py-8 text-gray-500">
                 Belum ada data klasemen untuk Grup {activeGrup}
-              </div>
+      </div>
             )}
             
             <div className="bg-green-50 p-3 text-sm text-green-800">
@@ -301,9 +301,9 @@ const HomePage = () => {
                 <Trophy className="h-4 w-4 mr-1" />
                 <span>Dua tim teratas dari setiap grup akan lolos ke babak gugur</span>
               </div>
-            </div>
-          </div>
+                        </div>
         </div>
+      </div>
 
         {/* Right Column */}
         <div className="space-y-8">
@@ -313,7 +313,7 @@ const HomePage = () => {
               <h2 className="text-xl font-bold flex items-center">
                 <Users className="mr-2 h-5 w-5 text-purple-200" />
                 Struktur Grup
-              </h2>
+        </h2>
             </div>
             <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
               {['A', 'B', 'C', 'D'].map((grup) => (
@@ -340,8 +340,8 @@ const HomePage = () => {
                   </ul>
                 </div>
               ))}
-            </div>
-          </div>
+                        </div>
+                      </div>
         </div>
       </div>
     </div>

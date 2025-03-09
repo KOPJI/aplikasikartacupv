@@ -14,6 +14,7 @@ import HasilBabakGugurForm from './components/HasilBabakGugurForm';
 import DataInitializer from './components/DataInitializer';
 import FirestoreIntegration from './components/FirestoreIntegration';
 import StatistikPemain from './components/StatistikPemain';
+import ManajemenPemainGrup from './components/ManajemenPemainGrup';
 import { TournamentProvider } from './context/TournamentContext';
 import './index.css';
 
@@ -52,6 +53,7 @@ function App() {
               <Route path="/data-initializer" element={<DataInitializer />} />
               <Route path="/firebase-integration" element={<FirestoreIntegration />} />
               <Route path="/statistik" element={<StatistikPemain />} />
+              <Route path="/pemain-grup" element={<ManajemenPemainGrup />} />
             </Routes>
           </div>
         </div>
