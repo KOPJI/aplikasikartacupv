@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Trophy, Calendar, ChevronLeft, ChevronRight, Loader, Shield, Trash2, RefreshCcw, Settings, AlertCircle } from 'lucide-react';
+import { Trophy, Calendar, ChevronLeft, ChevronRight, Loader, Shield, Trash2, RefreshCcw } from 'lucide-react';
 import { useTournament } from '../context/TournamentContext';
 import { initializeMatchesToFirestore, deleteCollectionData } from '../services/firebase';
 import TeamScheduleStats from './TeamScheduleStats';
