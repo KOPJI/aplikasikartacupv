@@ -6,7 +6,6 @@ import GrupList from './components/GrupList';
 import TimForm from './components/TimForm';
 import PemainForm from './components/PemainForm';
 import DaftarTim from './components/DaftarTim';
-import JadwalPertandingan from './components/JadwalPertandingan';
 import HasilPertandinganForm from './components/HasilPertandinganForm';
 import Klasemen from './components/Klasemen';
 import BaganGugur from './components/BaganGugur';
@@ -56,9 +55,7 @@ function App() {
       <Router>
         <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 font-['Montserrat']">
           <Navbar />
-          <div 
-            className="relative pt-6 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto"
-          >
+          <div className="relative pt-6 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
             {/* Decorative elements */}
             <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-green-100 to-transparent z-0"></div>
             <div className="absolute bottom-0 left-0 w-full h-40 bg-gradient-to-t from-green-100 to-transparent z-0"></div>
@@ -73,7 +70,6 @@ function App() {
                 <Route path="/tim" element={<DaftarTim />} />
                 <Route path="/pemain/tambah/:timId" element={<PemainForm />} />
                 <Route path="/pemain/edit/:id" element={<PemainForm />} />
-                <Route path="/jadwal" element={<JadwalPertandingan />} />
                 <Route path="/hasil/:id" element={<HasilPertandinganForm />} />
                 <Route path="/klasemen" element={<Klasemen />} />
                 <Route path="/babak-gugur" element={<BaganGugur />} />
