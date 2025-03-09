@@ -1,4 +1,4 @@
-import { Shield, Trophy, Calendar, ChartLine, Users, AlertCircle } from 'lucide-react';
+import { Shield, Trophy, Calendar, BarChart, Users, AlertCircle } from 'lucide-react';
 import { useTournament } from '../context/TournamentContext';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -71,7 +71,7 @@ const HomePage = () => {
               Jadwal Pertandingan
             </Link>
             <Link to="/klasemen" className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-full font-medium transition-colors flex items-center">
-              <ChartLine className="h-5 w-5 mr-2" />
+              <BarChart className="h-5 w-5 mr-2" />
               Lihat Klasemen
             </Link>
             <Link to="/statistik" className="px-6 py-3 bg-yellow-600 hover:bg-yellow-700 rounded-full font-medium transition-colors flex items-center">
